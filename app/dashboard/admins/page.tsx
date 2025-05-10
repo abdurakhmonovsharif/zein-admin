@@ -220,7 +220,7 @@ export default function AdminsPage() {
                   </TableCell>
                   <TableCell className="hidden md:table-cell">{formatLastLogin(admin.lastLogin)}</TableCell>
                   <TableCell>
-                    <Badge variant={admin.status === "active" ? "success" : "secondary"} className="w-fit">
+                    <Badge variant={admin.status === "active" ? "default" : "secondary"} className="w-fit">
                       {admin.status === "active" ? "Активен" : "Неактивен"}
                     </Badge>
                   </TableCell>

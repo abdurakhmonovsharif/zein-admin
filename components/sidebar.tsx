@@ -13,6 +13,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  MailQuestion,
   Menu,
   Settings,
   ShieldCheck,
@@ -74,11 +75,11 @@ export function Sidebar({ className }: SidebarProps) {
       href: "/dashboard/admins",
       icon: <ShieldCheck className="h-5 w-5" />,
     },
-    // {
-    //   title: "Аналитика",
-    //   href: "/dashboard/analytics",
-    //   icon: <BarChart3 className="h-5 w-5" />,
-    // },
+    {
+      title: "Часто задаваемые вопросы",
+      href: "/dashboard/faq",
+      icon: <MailQuestion className="h-5 w-5" />,
+    },
     {
       title: "Настройки",
       href: "/dashboard/settings",
@@ -141,7 +142,7 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div className={cn("hidden border-r bg-background lg:block", className)}>
       <ScrollArea className="h-full">
-        <div className="flex h-full w-60 flex-col">
+        <div className="flex h-full w-72 flex-col">
           <NavItems />
         </div>
       </ScrollArea>

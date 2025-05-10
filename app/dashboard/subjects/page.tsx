@@ -1,9 +1,6 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -12,60 +9,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, Pencil, Trash2, BookOpen } from "lucide-react"
-
-// Интерфейс для предмета
-interface Subject {
-  id: number
-  name: string
-  description: string
-  lessonsCount: number
-  createdAt: string
-}
-
-// Начальные данные для демонстрации
-const initialSubjects: Subject[] = [
-  {
-    id: 1,
-    name: "Математика",
-    description: "Базовый курс математики для начальных классов",
-    lessonsCount: 12,
-    createdAt: "2023-01-15",
-  },
-  {
-    id: 2,
-    name: "Физика",
-    description: "Введение в физику для средней школы",
-    lessonsCount: 8,
-    createdAt: "2023-02-20",
-  },
-  {
-    id: 3,
-    name: "Информатика",
-    description: "Основы программирования и компьютерных наук",
-    lessonsCount: 15,
-    createdAt: "2023-03-10",
-  },
-  {
-    id: 4,
-    name: "Биология",
-    description: "Изучение живых организмов и их взаимодействий",
-    lessonsCount: 10,
-    createdAt: "2023-04-05",
-  },
-  {
-    id: 5,
-    name: "Химия",
-    description: "Основы химии и химических реакций",
-    lessonsCount: 9,
-    createdAt: "2023-05-12",
-  },
-]
+import { Subject, useSubjects } from "@/hooks/useSubject"
+import { BookOpen, Pencil, Plus, Search, Trash2 } from "lucide-react"
+import { useState } from "react"
 
 export default function SubjectsPage() {
-  const [subjects, setSubjects] = useState<Subject[]>(initialSubjects)
+  const { data: subjects, isLoading, error, addSubjectMutation, updateSubjectMutation, deleteSubjectMutation } = useSubjects()
+
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -77,22 +31,20 @@ export default function SubjectsPage() {
   })
 
   // Фильтрация предметов по поисковому запросу
-  const filteredSubjects = subjects.filter(
-    (subject) =>
+  const filteredSubjects = subjects?.filter(
+    (subject:any) =>
       subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      subject.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      subject.description.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   // Обработчик добавления нового предмета
   const handleAddSubject = () => {
     const subject: Subject = {
-      id: subjects.length > 0 ? Math.max(...subjects.map((s) => s.id)) + 1 : 1,
       name: newSubject.name,
       description: newSubject.description,
-      lessonsCount: 0,
-      createdAt: new Date().toISOString().split("T")[0],
+      id: 0
     }
-    setSubjects([...subjects, subject])
+    addSubjectMutation.mutate(subject)
     setNewSubject({ name: "", description: "" })
     setIsAddDialogOpen(false)
   }
@@ -100,7 +52,7 @@ export default function SubjectsPage() {
   // Обработчик редактирования предмета
   const handleEditSubject = () => {
     if (currentSubject) {
-      setSubjects(subjects.map((subject) => (subject.id === currentSubject.id ? currentSubject : subject)))
+      updateSubjectMutation.mutate(currentSubject)
       setIsEditDialogOpen(false)
     }
   }
@@ -108,7 +60,7 @@ export default function SubjectsPage() {
   // Обработчик удаления предмета
   const handleDeleteSubject = () => {
     if (currentSubject) {
-      setSubjects(subjects.filter((subject) => subject.id !== currentSubject.id))
+      deleteSubjectMutation.mutate(currentSubject.id)
       setIsDeleteDialogOpen(false)
     }
   }
@@ -148,7 +100,7 @@ export default function SubjectsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredSubjects.length > 0 ? (
+            {filteredSubjects?.length > 0 ? (
               filteredSubjects.map((subject) => (
                 <TableRow key={subject.id}>
                   <TableCell className="font-medium">{subject.id}</TableCell>

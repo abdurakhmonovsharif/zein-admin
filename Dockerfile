@@ -9,16 +9,14 @@ COPY pnpm-lock.yaml ./
 
 # Install dependencies with pnpm
 RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile
+# Remove --frozen-lockfile flag to allow pnpm to update the lockfile
+RUN pnpm install
 
 # Copy all project files (including components directory)
 COPY . .
 
-# Ensure components directory exists and has correct files
-RUN ls -la ./components || echo "Components directory not found"
-
-# Build the application with verbose logging
-RUN pnpm run build --verbose
+# Build the application
+RUN pnpm run build
 
 # Expose port
 EXPOSE 3001

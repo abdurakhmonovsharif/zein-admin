@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: zein-edtech-admin
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
+    plan: starter
+    # Adjust this according to your needs
+    scaling:
+      minInstances: 1
+      maxInstances: 1

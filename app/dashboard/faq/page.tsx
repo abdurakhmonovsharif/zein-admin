@@ -16,16 +16,11 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import { useFAQs } from "@/hooks/useFAQs"
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react"
+import { FAQ, useFAQs } from "@/hooks/useFAQs"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
 
-interface FAQ {
-  id: number
-  question: string
-  answer: string
-  order: number
-}
+
 
 export default function FAQPage() {
   const { toast } = useToast()
@@ -33,7 +28,7 @@ export default function FAQPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [currentFAQ, setCurrentFAQ] = useState<FAQ | null>(null)
-  const [formData, setFormData] = useState({ question: "", answer: "" })
+  const [formData, setFormData] = useState({ question_ru: "", answer_ru: "", question_uz: "", answer_uz: "" })
 
   const {
     data: faqs,
@@ -48,8 +43,10 @@ export default function FAQPage() {
     addFAQMutation.mutate(
       {
         id: 0,
-        question: formData.question,
-        answer: formData.answer,
+        question_ru: formData.question_ru,
+        question_uz: formData.question_uz,
+        answer_ru: formData.answer_ru,
+        answer_uz: formData.answer_uz,
         order: (faqs?.length || 0) + 1,
       },
       {
@@ -67,8 +64,10 @@ export default function FAQPage() {
     updateFAQMutation.mutate(
       {
         ...currentFAQ,
-        question: formData.question,
-        answer: formData.answer,
+        question_ru: formData.question_ru,
+        question_uz: formData.question_uz,
+        answer_ru: formData.answer_ru,
+        answer_uz: formData.answer_uz,
       },
       {
         onSuccess: () => {
@@ -94,29 +93,11 @@ export default function FAQPage() {
     })
   }
 
-  const moveFAQUp = (id: number) => {
-    if (!faqs) return
-    const index = faqs.findIndex((faq) => faq.id === id)
-    if (index <= 0) return
-    const current = faqs[index]
-    const previous = faqs[index - 1]
-    updateFAQMutation.mutate({ ...current, order: previous.order })
-    updateFAQMutation.mutate({ ...previous, order: current.order })
-  }
 
-  const moveFAQDown = (id: number) => {
-    if (!faqs) return
-    const index = faqs.findIndex((faq) => faq.id === id)
-    if (index >= faqs.length - 1) return
-    const current = faqs[index]
-    const next = faqs[index + 1]
-    updateFAQMutation.mutate({ ...current, order: next.order })
-    updateFAQMutation.mutate({ ...next, order: current.order })
-  }
 
   const openEditDialog = (faq: FAQ) => {
     setCurrentFAQ(faq)
-    setFormData({ question: faq.question, answer: faq.answer })
+    setFormData({ question_ru: faq.question_ru, answer_ru: faq.answer_ru, question_uz: faq.question_uz, answer_uz: faq.answer_uz })
     setIsEditDialogOpen(true)
   }
 
@@ -126,7 +107,7 @@ export default function FAQPage() {
   }
 
   const resetForm = () => {
-    setFormData({ question: "", answer: "" })
+    setFormData({ question_ru: "", answer_ru: "", question_uz: "", answer_uz: "" })
     setCurrentFAQ(null)
   }
 
@@ -149,10 +130,14 @@ export default function FAQPage() {
               <DialogDescription>Заполните поля, чтобы добавить новый часто задаваемый вопрос на сайт.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <Label htmlFor="question">Вопрос</Label>
-              <Input id="question" value={formData.question} onChange={(e) => setFormData({ ...formData, question: e.target.value })} />
-              <Label htmlFor="answer">Ответ</Label>
-              <Textarea id="answer" rows={5} value={formData.answer} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} />
+              <Label htmlFor="question_ru">Вопрос (РУ)</Label>
+              <Input id="question_ru" value={formData.question_ru} onChange={(e) => setFormData({ ...formData, question_ru: e.target.value })} />
+              <Label htmlFor="answer_ru">Ответ (РУ)</Label>
+              <Textarea id="answer_ru" rows={5} value={formData.answer_ru} onChange={(e) => setFormData({ ...formData, answer_ru: e.target.value })} />
+              <Label htmlFor="question_uz">Вопрос (УЗ)</Label>
+              <Input id="question_uz" value={formData.question_uz} onChange={(e) => setFormData({ ...formData, question_uz: e.target.value })} />
+              <Label htmlFor="answer_uz">Ответ (УЗ)</Label>
+              <Textarea id="answer_uz" rows={5} value={formData.answer_uz} onChange={(e) => setFormData({ ...formData, answer_uz: e.target.value })} />
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Отмена</Button>
@@ -171,26 +156,22 @@ export default function FAQPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Порядок</TableHead>
-                <TableHead>Вопрос</TableHead>
-                <TableHead>Ответ</TableHead>
+                <TableHead>Вопрос (РУ)</TableHead>
+                <TableHead>Ответ (УЗ)</TableHead>
+                <TableHead>Вопрос (РУ)</TableHead>
+                <TableHead>Ответ (УЗ)</TableHead>
                 <TableHead className="text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {faqs?.sort((a, b) => a.order - b.order).map((faq) => (
+              {faqs?.map((faq) => (
                 <TableRow key={faq.id}>
-                  <TableCell>{faq.order}</TableCell>
-                  <TableCell>{faq.question}</TableCell>
-                  <TableCell className="max-w-md truncate">{faq.answer}</TableCell>
+                  <TableCell>{faq.question_uz}</TableCell>
+                  <TableCell className="max-w-md truncate">{faq.answer_uz}</TableCell>
+                  <TableCell>{faq.question_ru}</TableCell>
+                  <TableCell className="max-w-md truncate">{faq.answer_ru}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="icon" onClick={() => moveFAQUp(faq.id)} disabled={faq.order === 1}>
-                        <ArrowUp className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="icon" onClick={() => moveFAQDown(faq.id)} disabled={faq.order === faqs.length}>
-                        <ArrowDown className="h-4 w-4" />
-                      </Button>
                       <Button variant="outline" size="icon" onClick={() => openEditDialog(faq)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -215,9 +196,13 @@ export default function FAQPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Label htmlFor="edit-question">Вопрос</Label>
-            <Input id="edit-question" value={formData.question} onChange={(e) => setFormData({ ...formData, question: e.target.value })} />
+            <Input id="edit-question" value={formData.question_ru} onChange={(e) => setFormData({ ...formData, question_ru: e.target.value })} />
             <Label htmlFor="edit-answer">Ответ</Label>
-            <Textarea id="edit-answer" rows={5} value={formData.answer} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} />
+            <Textarea id="edit-answer" rows={5} value={formData.answer_ru} onChange={(e) => setFormData({ ...formData, answer_ru: e.target.value })} />
+            <Label htmlFor="edit-question">Вопрос</Label>
+            <Input id="edit-question" value={formData.question_uz} onChange={(e) => setFormData({ ...formData, question_uz: e.target.value })} />
+            <Label htmlFor="edit-answer">Ответ</Label>
+            <Textarea id="edit-answer" rows={5} value={formData.answer_uz} onChange={(e) => setFormData({ ...formData, answer_uz: e.target.value })} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Отмена</Button>

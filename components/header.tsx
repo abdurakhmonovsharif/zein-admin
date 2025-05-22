@@ -10,30 +10,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/hooks/useAuth"
 import { Bell, LogOut, Settings, User } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
 
+export const getRoleText = (role: string) => {
+  switch (role) {
+    case 'dev':
+      return 'Разработчик'
+    case 'super_admin':
+      return 'Супер администратор'
+    case 'admin':
+      return 'Администратор'
+    default:
+      return 'Пользователь'
+  }
+}
 export function Header() {
   const { setTheme, theme } = useTheme()
   const router = useRouter()
-  const [user, setUser] = useState<{ name: string; role: string } | null>(null)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-    const userData = localStorage.getItem("user")
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
-  }, [])
-
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn")
-    localStorage.removeItem("user")
-    router.push("/login")
-  }
+  const { user, logout } = useAuth()
 
   // Получение инициалов из имени
   const getInitials = (name: string) => {
@@ -44,8 +41,14 @@ export function Header() {
       .toUpperCase()
   }
 
-  if (!mounted) {
-    return null
+  const handleLogout = () => {
+    logout()
+    router.push("/login")
+  }
+
+
+  const navigateToSettings = (tab: string = 'general') => {
+    router.push(`/dashboard/settings?tab=${tab}`)
   }
 
   return (
@@ -58,28 +61,30 @@ export function Header() {
           </span>
           <span className="sr-only">Уведомления</span>
         </Button>
-        {/* <Button variant="outline" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Переключить тему</span>
-        </Button> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar>
-                <AvatarImage src="/placeholder.avif" alt={user?.name || "Пользователь"} />
-                <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
+                <AvatarImage src="/placeholder.avif" alt={user?.full_name || "Пользователь"} />
+                <AvatarFallback>{user ? getInitials(user.full_name) : "U"}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{user?.full_name}</p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user?.role ? getRoleText(user.role) : 'Загрузка...'}
+                </p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/dashboard/settings")} className="cursor-pointer">
+            <DropdownMenuItem onClick={() => navigateToSettings('account')} className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               <span>Профиль</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/dashboard/settings")}>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => navigateToSettings()}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Настройки</span>
             </DropdownMenuItem>

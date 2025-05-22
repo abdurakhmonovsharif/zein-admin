@@ -8,32 +8,35 @@ import {
 // Define the FAQ type to match your backend
 export interface FAQ {
   id: number
-  question: string
-  answer: string
-  order: number
+  question_ru: string
+  question_uz: string
+  answer_ru: string
+  answer_uz: string
+  order: number;
+  created_at?:string
 }
 
 // 1. Fetch FAQs
 const fetchFAQs = async (): Promise<FAQ[]> => {
-  const res = await api.get("/faq/")
+  const res = await api.get("/faqs/")
   return res.data
 }
 
 // 2. Add FAQ
 const addFAQ = async (newFAQ: FAQ): Promise<FAQ> => {
-  const res = await api.post("/faq/", newFAQ)
+  const res = await api.post("/faqs/", newFAQ)
   return res.data
 }
 
 // 3. Update FAQ
 const updateFAQ = async (updatedFAQ: FAQ): Promise<FAQ> => {
-  const res = await api.put(`/faq/${updatedFAQ.id}/`, updatedFAQ)
+  const res = await api.put(`/faqs/${updatedFAQ.id}/`, updatedFAQ)
   return res.data
 }
 
 // 4. Delete FAQ
 const deleteFAQ = async (id: number): Promise<void> => {
-  await api.delete(`/faq/${id}/`)
+  await api.delete(`/faqs/${id}/`)
 }
 
 // 5. useFAQs hook
@@ -126,3 +129,4 @@ export function useFAQs() {
     deleteFAQMutation,
   }
 }
+

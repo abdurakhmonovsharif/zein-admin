@@ -1,20 +1,14 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { Subject, useSubjects } from "@/hooks/useSubject"
-import { BookOpen, Pencil, Plus, Search, Trash2 } from "lucide-react"
+import { formatDate } from "@/lib/formatDate"
+import { Pencil, Plus, Search, Trash2 } from "lucide-react"
 import { useState } from "react"
 
 export default function SubjectsPage() {
@@ -25,19 +19,21 @@ export default function SubjectsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [currentSubject, setCurrentSubject] = useState<Subject | null>(null)
-  const [newSubject, setNewSubject] = useState({
-    name: "",
-    description: "",
-  })
+  const [newSubject, setNewSubject] = useState({ name: "", description: "" })
 
-  // Фильтрация предметов по поисковому запросу
-  const filteredSubjects = subjects?.filter(
-    (subject:any) =>
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+
+  const filteredSubjects = subjects
+    ?.filter((subject: any) =>
       subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       subject.description.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    )
+    ?.sort((a, b) => {
+      const dateA = new Date(a.created_at || "").getTime()
+      const dateB = new Date(b.created_at || "").getTime()
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA
+    })
 
-  // Обработчик добавления нового предмета
   const handleAddSubject = () => {
     const subject: Subject = {
       name: newSubject.name,
@@ -49,7 +45,6 @@ export default function SubjectsPage() {
     setIsAddDialogOpen(false)
   }
 
-  // Обработчик редактирования предмета
   const handleEditSubject = () => {
     if (currentSubject) {
       updateSubjectMutation.mutate(currentSubject)
@@ -57,7 +52,6 @@ export default function SubjectsPage() {
     }
   }
 
-  // Обработчик удаления предмета
   const handleDeleteSubject = () => {
     if (currentSubject) {
       deleteSubjectMutation.mutate(currentSubject.id)
@@ -95,19 +89,24 @@ export default function SubjectsPage() {
               <TableHead>Название</TableHead>
               <TableHead className="hidden md:table-cell">Описание</TableHead>
               <TableHead>Уроков</TableHead>
-              <TableHead className="hidden md:table-cell">Дата создания</TableHead>
+              <TableHead
+                className="hidden md:table-cell cursor-pointer select-none"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              >
+                Дата создания {sortOrder === "asc" ? "↑" : "↓"}
+              </TableHead>
               <TableHead className="text-right">Действия</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredSubjects?.length > 0 ? (
-              filteredSubjects.map((subject) => (
+            {filteredSubjects?.length || Array.from({ length: 0 }).length > 0 ? (
+              filteredSubjects?.map((subject) => (
                 <TableRow key={subject.id}>
                   <TableCell className="font-medium">{subject.id}</TableCell>
                   <TableCell>{subject.name}</TableCell>
                   <TableCell className="hidden md:table-cell max-w-xs truncate">{subject.description}</TableCell>
-                  <TableCell>{subject.lessonsCount}</TableCell>
-                  <TableCell className="hidden md:table-cell">{subject.createdAt}</TableCell>
+                  <TableCell>{subject.topic_count}</TableCell>
+                  <TableCell className="hidden md:table-cell">{formatDate(subject.created_at || "")}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -132,10 +131,6 @@ export default function SubjectsPage() {
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Удалить</span>
                       </Button>
-                      <Button variant="outline" size="icon">
-                        <BookOpen className="h-4 w-4" />
-                        <span className="sr-only">Уроки</span>
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -151,7 +146,6 @@ export default function SubjectsPage() {
         </Table>
       </div>
 
-      {/* Диалог добавления предмета */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -189,7 +183,7 @@ export default function SubjectsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Диалог редактирования предмета */}
+      {/* Редактирование предмета */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -199,9 +193,9 @@ export default function SubjectsPage() {
           {currentSubject && (
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-name">Название</Label>
+                <Label htmlFor="edit-title_ru">Название</Label>
                 <Input
-                  id="edit-name"
+                  id="edit-title_ru"
                   value={currentSubject.name}
                   onChange={(e) => setCurrentSubject({ ...currentSubject, name: e.target.value })}
                 />
@@ -210,7 +204,7 @@ export default function SubjectsPage() {
                 <Label htmlFor="edit-description">Описание</Label>
                 <Textarea
                   id="edit-description"
-                  value={currentSubject.description}
+                  value={currentSubject.description || ""}
                   onChange={(e) => setCurrentSubject({ ...currentSubject, description: e.target.value })}
                 />
               </div>
@@ -227,13 +221,13 @@ export default function SubjectsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Диалог удаления предмета */}
+      {/* Удаление предмета */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Удалить предмет</DialogTitle>
             <DialogDescription>
-              Вы уверены, что хотите удалить этот предмет? Это действие нельзя отменить.
+              Вы уверены, что хотите удалить этот предмет? Это действие нельзя будет отменить.
             </DialogDescription>
           </DialogHeader>
           {currentSubject && (
@@ -256,6 +250,8 @@ export default function SubjectsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+
     </div>
   )
 }

@@ -1,92 +1,118 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { PasswordInput } from "@/components/ui/password-input"
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function LoginPage() {
+  const { login } = useAuth()
   const router = useRouter()
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  })
+  const [errors, setErrors] = useState({
+    username: "",
+    password: "",
+  })
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError("")
+    setErrors({ username: "", password: "" })
 
-    // Имитация проверки учетных данных
-    // В реальном приложении здесь будет API-запрос
-    setTimeout(() => {
-      if (username === "admin" && password === "password") {
-        // Сохраняем информацию о входе в localStorage
-        localStorage.setItem("isLoggedIn", "true")
-        localStorage.setItem("user", JSON.stringify({ name: "Администратор", role: "admin" }))
-        router.push("/dashboard")
-      } else {
-        setError("Неверное имя пользователя или пароль")
+    try {
+      if (!formData.username) {
+        setErrors(prev => ({ ...prev, username: "Имя пользователя обязательно" }))
+        return
       }
+      if (!formData.password) {
+        setErrors(prev => ({ ...prev, password: "Пароль обязателен" }))
+        return
+      }
+
+      await login(formData.username, formData.password)
+      router.push("/dashboard")
+    } catch (error: any) {
+      let errorMessage = "Произошла ошибка при входе"
+
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail
+      }
+
+      if (errorMessage === "Invalid credentials") {
+        errorMessage = "Неверное имя пользователя или пароль"
+      } else if (errorMessage === "No active account found with the given credentials") {
+        errorMessage = "Не найден активный аккаунт с указанными учетными данными"
+      }
+
+      toast({
+        title: "Ошибка",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-slate-50">
-      <Card className="w-full max-w-md">
+    <div className="flex h-screen w-full items-center justify-center">
+      <Card className="w-[400px]">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">ZEIN EDTECH</CardTitle>
-          <CardDescription className="text-center">
-            Введите свои учетные данные для входа в админ-панель
+          <CardTitle className="text-2xl">Вход в систему</CardTitle>
+          <CardDescription>
+            Введите свои учетные данные для входа
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <form onSubmit={handleLogin}>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="username">Имя пользователя</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Введите имя пользователя"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Пароль</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Введите пароль"
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full bg-[#7635E9] hover:bg-[#6025c7]" disabled={isLoading}>
-                {isLoading ? "Вход..." : "Войти"}
-              </Button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Имя пользователя</Label>
+              <Input
+                id="username"
+                placeholder="Введите имя пользователя"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                error={errors.username}
+              />
+              {errors.username && (
+                <p className="text-sm text-red-500">{errors.username}</p>
+              )}
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Пароль</Label>
+              <PasswordInput
+                id="password"
+                placeholder="Введите пароль"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                error={errors.password}
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-[#7635E9] hover:bg-[#6025c7]"
+              disabled={isLoading}
+            >
+              {isLoading ? "Вход..." : "Войти"}
+            </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} ZEIN EDTECH. Все права защищены.</p>
-        </CardFooter>
       </Card>
     </div>
   )

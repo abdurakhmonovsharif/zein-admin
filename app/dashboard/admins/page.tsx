@@ -1,98 +1,84 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { getRoleText } from "@/components/header"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Search, Pencil, Trash2, ShieldCheck } from "lucide-react"
-
-// Интерфейс для администратора
-interface Admin {
-  id: number
-  name: string
-  email: string
-  role: "admin" | "superadmin"
-  lastLogin: string
-  status: "active" | "inactive"
-  image: string
-}
-
-// Начальные данные для демонстрации
-const initialAdmins: Admin[] = [
-  {
-    id: 1,
-    name: "Администратор",
-    email: "admin@zein.edu",
-    role: "superadmin",
-    lastLogin: "2023-05-15T10:30:00",
-    status: "active",
-    image: "",
-  },
-  {
-    id: 2,
-    name: "Иван Петров",
-    email: "ivan@zein.edu",
-    role: "admin",
-    lastLogin: "2023-05-14T14:45:00",
-    status: "active",
-    image: "",
-  },
-  {
-    id: 3,
-    name: "Мария Сидорова",
-    email: "maria@zein.edu",
-    role: "admin",
-    lastLogin: "2023-05-10T09:15:00",
-    status: "active",
-    image: "",
-  },
-  {
-    id: 4,
-    name: "Алексей Иванов",
-    email: "alexey@zein.edu",
-    role: "admin",
-    lastLogin: "2023-05-05T16:20:00",
-    status: "inactive",
-    image: "",
-  },
-]
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { PasswordInput } from "@/components/ui/password-input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useToast } from "@/hooks/use-toast"
+import { AdminUserCreate, useAdmins } from "@/hooks/useAdmins"
+import { useAuth } from "@/hooks/useAuth"
+import { format } from "date-fns"
+import { ru } from 'date-fns/locale'
+import { Edit, Lock, Plus, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function AdminsPage() {
-  const [admins, setAdmins] = useState<Admin[]>(initialAdmins)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [currentAdmin, setCurrentAdmin] = useState<Admin | null>(null)
-  const [newAdmin, setNewAdmin] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "admin",
+  const { user, isDevRole, isSuperAdminRole } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
+  const { admins, isLoading, createMutation, updateMutation, deleteMutation, resetPasswordMutation } = useAdmins()
+
+  const [newAdmin, setNewAdmin] = useState<AdminUserCreate>({
+    full_name: "",
+    username: "",
+    password: ""
   })
-  const [passwordError, setPasswordError] = useState("")
 
-  // Фильтрация администраторов по поисковому запросу
-  const filteredAdmins = admins.filter(
-    (admin) =>
-      admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      admin.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const [editAdmin, setEditAdmin] = useState<{
+    id: number,
+    full_name: string,
+    username: string
+  } | null>(null)
 
-  // Получение инициалов из имени
+  const [resetPassword, setResetPassword] = useState<{
+    id: number,
+    username: string,
+    new_password: string
+  } | null>(null)
+
+  const [deleteAdmin, setDeleteAdmin] = useState<{
+    id: number,
+    full_name: string,
+    username: string
+  } | null>(null)
+
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [newPasswordError, setNewPasswordError] = useState("")
+
+  // Role-based access control
+  useEffect(() => {
+    if (user && !isDevRole() && !isSuperAdminRole()) {
+      toast({
+        title: "Доступ запрещен",
+        description: "У вас нет прав для просмотра этой страницы",
+        variant: "destructive"
+      })
+      router.push("/dashboard")
+    }
+  }, [user, isDevRole, isSuperAdminRole, router, toast])
+
+  const validatePassword = (password: string) => {
+    const hasUpperCase = /[А-ЯA-Z]/.test(password)
+    const hasNumber = /\d/.test(password)
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+
+    if (!hasUpperCase) return "Пароль должен содержать хотя бы одну заглавную букву"
+    if (!hasNumber) return "Пароль должен содержать хотя бы одну цифру"
+    if (!hasSymbol) return "Пароль должен содержать хотя бы один специальный символ"
+    return ""
+  }
+
+  // Get initials for avatar
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -101,352 +87,372 @@ export default function AdminsPage() {
       .toUpperCase()
   }
 
-  // Форматирование даты последнего входа
-  const formatLastLogin = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleString("ru-RU", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  // Обработчик добавления нового администратора
-  const handleAddAdmin = () => {
-    // Проверка совпадения паролей
-    if (newAdmin.password !== newAdmin.confirmPassword) {
-      setPasswordError("Пароли не совпадают")
+  const handleCreateAdmin = async () => {
+    const passwordError = validatePassword(newAdmin.password)
+    if (passwordError) {
+      setNewPasswordError(passwordError)
       return
     }
 
-    const admin: Admin = {
-      id: admins.length > 0 ? Math.max(...admins.map((a) => a.id)) + 1 : 1,
-      name: newAdmin.name,
-      email: newAdmin.email,
-      role: newAdmin.role as "admin" | "superadmin",
-      lastLogin: new Date().toISOString(),
-      status: "active",
-      image: "",
+    try {
+      await createMutation.mutateAsync(newAdmin)
+      toast({
+        title: "Успешно",
+        description: "Администратор успешно создан"
+      })
+      setIsCreateDialogOpen(false)
+      setNewAdmin({
+        full_name: "",
+        username: "",
+        password: ""
+      })
+      setNewPasswordError("")
+    } catch (error: any) {
+      toast({
+        title: "Ошибка",
+        description: error.response?.data?.detail || "Произошла ошибка при создании администратора",
+        variant: "destructive"
+      })
     }
-    setAdmins([...admins, admin])
-    setNewAdmin({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      role: "admin",
-    })
-    setPasswordError("")
-    setIsAddDialogOpen(false)
   }
 
-  // Обработчик редактирования администратора
-  const handleEditAdmin = () => {
-    if (currentAdmin) {
-      setAdmins(admins.map((admin) => (admin.id === currentAdmin.id ? currentAdmin : admin)))
+  const handleUpdateAdmin = async () => {
+    if (!editAdmin) return
+
+    try {
+      await updateMutation.mutateAsync({
+        id: editAdmin.id,
+        data: {
+          full_name: editAdmin.full_name,
+          username: editAdmin.username
+        }
+      })
+      toast({
+        title: "Успешно",
+        description: "Данные администратора обновлены"
+      })
       setIsEditDialogOpen(false)
+      setEditAdmin(null)
+    } catch (error: any) {
+      toast({
+        title: "Ошибка",
+        description: error.response?.data?.detail || "Произошла ошибка при обновлении данных",
+        variant: "destructive"
+      })
     }
   }
 
-  // Обработчик удаления администратора
-  const handleDeleteAdmin = () => {
-    if (currentAdmin) {
-      setAdmins(admins.filter((admin) => admin.id !== currentAdmin.id))
-      setIsDeleteDialogOpen(false)
+  const handleResetPassword = async () => {
+    if (!resetPassword) return
+
+    const passwordError = validatePassword(resetPassword.new_password)
+    if (passwordError) {
+      setNewPasswordError(passwordError)
+      return
     }
+
+    try {
+      await resetPasswordMutation.mutateAsync({
+        id: resetPassword.id,
+        newPassword: resetPassword.new_password
+      })
+      toast({
+        title: "Успешно",
+        description: "Пароль администратора сброшен"
+      })
+      setIsResetPasswordDialogOpen(false)
+      setResetPassword(null)
+      setNewPasswordError("")
+    } catch (error: any) {
+      toast({
+        title: "Ошибка",
+        description: error.response?.data?.detail || "Произошла ошибка при сбросе пароля",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleDeleteAdmin = async () => {
+    if (!deleteAdmin) return
+
+    try {
+      await deleteMutation.mutateAsync(deleteAdmin.id)
+      toast({
+        title: "Успешно",
+        description: "Администратор успешно удален"
+      })
+      setIsDeleteDialogOpen(false)
+      setDeleteAdmin(null)
+    } catch (error: any) {
+      toast({
+        title: "Ошибка",
+        description: error.response?.data?.detail || "Произошла ошибка при удалении администратора",
+        variant: "destructive"
+      })
+    }
+  }
+
+  if (!user || (!isDevRole() && !isSuperAdminRole())) {
+    return null // Don't render anything if user doesn't have permission
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Администраторы</h1>
-        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-[#7635E9] hover:bg-[#6025c7]">
-          <Plus className="mr-2 h-4 w-4" /> Добавить администратора
-        </Button>
+        <h1 className="text-3xl font-bold">Управление администраторами</h1>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-[#7635E9] hover:bg-[#6025c7]">
+              <Plus className="mr-2 h-4 w-4" />
+              Добавить администратора
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Новый администратор</DialogTitle>
+              <DialogDescription>
+                Заполните данные для создания нового администратора
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="full_name">ФИО</Label>
+                <Input
+                  id="full_name"
+                  value={newAdmin.full_name}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, full_name: e.target.value })}
+                  placeholder="Введите ФИО администратора"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="username">Имя пользователя</Label>
+                <Input
+                  id="username"
+                  value={newAdmin.username}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
+                  placeholder="Введите имя пользователя"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Пароль</Label>
+                <PasswordInput
+                  id="password"
+                  value={newAdmin.password}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                  placeholder="Введите пароль"
+                  error={newPasswordError}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={handleCreateAdmin}
+                className="bg-[#7635E9] hover:bg-[#6025c7]"
+                disabled={createMutation.isPending}
+              >
+                {createMutation.isPending ? "Создание..." : "Создать"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Поиск администраторов..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Администратор</TableHead>
-              <TableHead>Роль</TableHead>
-              <TableHead className="hidden md:table-cell">Последний вход</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead className="text-right">Действия</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAdmins.length > 0 ? (
-              filteredAdmins.map((admin) => (
-                <TableRow key={admin.id}>
-                  <TableCell className="font-medium">{admin.id}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Avatar>
-                        <AvatarImage src={admin.image || "/placeholder.svg"} alt={admin.name} />
-                        <AvatarFallback>{getInitials(admin.name)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{admin.name}</div>
-                        <div className="text-xs text-muted-foreground">{admin.email}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={admin.role === "superadmin" ? "default" : "outline"}
-                      className="flex items-center gap-1 w-fit"
-                    >
-                      <ShieldCheck className="h-3 w-3" />
-                      {admin.role === "superadmin" ? "Суперадмин" : "Админ"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{formatLastLogin(admin.lastLogin)}</TableCell>
-                  <TableCell>
-                    <Badge variant={admin.status === "active" ? "default" : "secondary"} className="w-fit">
-                      {admin.status === "active" ? "Активен" : "Неактивен"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          setCurrentAdmin(admin)
-                          setIsEditDialogOpen(true)
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Редактировать</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          setCurrentAdmin(admin)
-                          setIsDeleteDialogOpen(true)
-                        }}
-                        disabled={admin.role === "superadmin"} // Запрещаем удалять суперадмина
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Удалить</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+      <Card>
+        <CardHeader>
+          <CardTitle>Список администраторов</CardTitle>
+          <CardDescription>
+            Управление учетными записями администраторов системы
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center p-4">Загрузка...</div>
+          ) : admins && admins.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Администратор</TableHead>
+                  <TableHead>Имя пользователя</TableHead>
+                  <TableHead>Последний вход</TableHead>
+                  <TableHead>Роль</TableHead>
+                  <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  Администраторы не найдены.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {admins.map((admin) => (
+                  <TableRow key={admin.id}>
+                    <TableCell className="flex items-center gap-2">
+                      <Avatar>
+                        <AvatarImage src="/placeholder.avif" alt={admin.full_name} />
+                        <AvatarFallback>{getInitials(admin.full_name)}</AvatarFallback>
+                      </Avatar>
+                      <span>{admin.full_name}</span>
+                    </TableCell>
+                    <TableCell>{admin.username}</TableCell>
+                    <TableCell>
+                      {admin.date_joined
+                        ? format(new Date(admin.date_joined), 'dd MMMM yyyy, HH:mm', { locale: ru })
+                        : 'Никогда'}
+                    </TableCell>
+                    <TableCell><Badge variant={admin.role === 'super_admin' ? 'default' : 'secondary'}>{getRoleText(admin.role)}</Badge></TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            setEditAdmin({
+                              id: admin.id,
+                              full_name: admin.full_name,
+                              username: admin.username
+                            })
+                            setIsEditDialogOpen(true)
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            setResetPassword({
+                              id: admin.id,
+                              username: admin.username,
+                              new_password: ""
+                            })
+                            setIsResetPasswordDialogOpen(true)
+                          }}
+                        >
+                          <Lock className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            setDeleteAdmin({
+                              id: admin.id,
+                              full_name: admin.full_name,
+                              username: admin.username
+                            })
+                            setIsDeleteDialogOpen(true)
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center p-4">Нет данных о администраторах</div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Диалог добавления администратора */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+      {/* Edit Admin Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Добавить администратора</DialogTitle>
-            <DialogDescription>Заполните информацию о новом администраторе</DialogDescription>
+            <DialogTitle>Редактирование администратора</DialogTitle>
+            <DialogDescription>
+              Измените данные администратора
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">ФИО</Label>
-              <Input
-                id="name"
-                value={newAdmin.name}
-                onChange={(e) => setNewAdmin({ ...newAdmin, name: e.target.value })}
-                placeholder="Введите ФИО администратора"
-              />
+          {editAdmin && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit_full_name">ФИО</Label>
+                <Input
+                  id="edit_full_name"
+                  value={editAdmin.full_name}
+                  onChange={(e) => setEditAdmin({ ...editAdmin, full_name: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit_username">Имя пользователя</Label>
+                <Input
+                  id="edit_username"
+                  value={editAdmin.username}
+                  onChange={(e) => setEditAdmin({ ...editAdmin, username: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newAdmin.email}
-                onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
-                placeholder="Введите email"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Пароль</Label>
-              <Input
-                id="password"
-                type="password"
-                value={newAdmin.password}
-                onChange={(e) => {
-                  setNewAdmin({ ...newAdmin, password: e.target.value })
-                  setPasswordError("")
-                }}
-                placeholder="Введите пароль"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Подтверждение пароля</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={newAdmin.confirmPassword}
-                onChange={(e) => {
-                  setNewAdmin({ ...newAdmin, confirmPassword: e.target.value })
-                  setPasswordError("")
-                }}
-                placeholder="Подтвердите пароль"
-              />
-              {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Роль</Label>
-              <Select value={newAdmin.role} onValueChange={(value) => setNewAdmin({ ...newAdmin, role: value })}>
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Выберите роль" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Администратор</SelectItem>
-                  <SelectItem value="superadmin">Суперадминистратор</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button
+              onClick={handleUpdateAdmin}
+              className="bg-[#7635E9] hover:bg-[#6025c7]"
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? "Сохранение..." : "Сохранить изменения"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Сброс пароля</DialogTitle>
+            <DialogDescription>
+              Установите новый пароль для пользователя {resetPassword?.username}
+            </DialogDescription>
+          </DialogHeader>
+          {resetPassword && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="new_password">Новый пароль</Label>
+                <PasswordInput
+                  id="new_password"
+                  value={resetPassword.new_password}
+                  onChange={(e) => {
+                    setResetPassword({ ...resetPassword, new_password: e.target.value })
+                    setNewPasswordError("")
+                  }}
+                  placeholder="Введите новый пароль"
+                  error={newPasswordError}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              onClick={handleResetPassword}
+              className="bg-[#7635E9] hover:bg-[#6025c7]"
+              disabled={resetPasswordMutation.isPending}
+            >
+              {resetPasswordMutation.isPending ? "Сброс..." : "Сбросить пароль"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Admin Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Удаление администратора</DialogTitle>
+            <DialogDescription>
+              Вы уверены, что хотите удалить администратора {deleteAdmin?.full_name}?
+              Это действие нельзя отменить.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Отмена
             </Button>
             <Button
-              onClick={handleAddAdmin}
-              className="bg-[#7635E9] hover:bg-[#6025c7]"
-              disabled={!newAdmin.name || !newAdmin.email || !newAdmin.password || !newAdmin.confirmPassword}
+              variant="destructive"
+              onClick={handleDeleteAdmin}
+              disabled={deleteMutation.isPending}
             >
-              Добавить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Диалог редактирования администратора */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Редактировать администратора</DialogTitle>
-            <DialogDescription>Измените информацию об администраторе</DialogDescription>
-          </DialogHeader>
-          {currentAdmin && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">ФИО</Label>
-                <Input
-                  id="edit-name"
-                  value={currentAdmin.name}
-                  onChange={(e) => setCurrentAdmin({ ...currentAdmin, name: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-email">Email</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={currentAdmin.email}
-                  onChange={(e) => setCurrentAdmin({ ...currentAdmin, email: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-role">Роль</Label>
-                <Select
-                  value={currentAdmin.role}
-                  onValueChange={(value) => setCurrentAdmin({ ...currentAdmin, role: value as "admin" | "superadmin" })}
-                  disabled={currentAdmin.role === "superadmin"} // Запрещаем менять роль суперадмина
-                >
-                  <SelectTrigger id="edit-role">
-                    <SelectValue placeholder="Выберите роль" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Администратор</SelectItem>
-                    <SelectItem value="superadmin">Суперадминистратор</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-status">Статус</Label>
-                <Select
-                  value={currentAdmin.status}
-                  onValueChange={(value) =>
-                    setCurrentAdmin({ ...currentAdmin, status: value as "active" | "inactive" })
-                  }
-                  disabled={currentAdmin.role === "superadmin"} // Запрещаем менять статус суперадмина
-                >
-                  <SelectTrigger id="edit-status">
-                    <SelectValue placeholder="Выберите статус" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Активен</SelectItem>
-                    <SelectItem value="inactive">Неактивен</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Отмена
-            </Button>
-            <Button onClick={handleEditAdmin} className="bg-[#7635E9] hover:bg-[#6025c7]">
-              Сохранить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Диалог удаления администратора */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Удалить администратора</DialogTitle>
-            <DialogDescription>
-              Вы уверены, что хотите удалить этого администратора? Это действие нельзя отменить.
-            </DialogDescription>
-          </DialogHeader>
-          {currentAdmin && (
-            <div className="py-4">
-              <p>
-                <strong>ФИО:</strong> {currentAdmin.name}
-              </p>
-              <p>
-                <strong>Email:</strong> {currentAdmin.email}
-              </p>
-              <p>
-                <strong>Роль:</strong> {currentAdmin.role === "superadmin" ? "Суперадминистратор" : "Администратор"}
-              </p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Отмена
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteAdmin}>
-              Удалить
+              {deleteMutation.isPending ? "Удаление..." : "Удалить"}
             </Button>
           </DialogFooter>
         </DialogContent>

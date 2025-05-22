@@ -1,11 +1,11 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
+import { Sidebar } from "@/components/sidebar"
+import { useAuth } from "@/hooks/useAuth"
+import { usePathname, useRouter } from "next/navigation"
+import type React from "react"
+import { useEffect } from "react"
 
 export default function DashboardLayout({
   children,
@@ -14,21 +14,23 @@ export default function DashboardLayout({
 }>) {
   const router = useRouter()
   const pathname = usePathname()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const { isAuthenticated, user, getMe } = useAuth()
 
   useEffect(() => {
-    setIsMounted(true)
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true"
-    setIsLoggedIn(loggedIn)
-
-    if (!loggedIn && pathname !== "/login") {
+    if (!isAuthenticated && pathname !== "/login") {
       router.push("/login")
+    } else if (isAuthenticated) {
+      // If authenticated, get latest user data
+      getMe()
     }
-  }, [pathname, router])
+  }, [isAuthenticated, pathname, router, getMe])
 
-  if (!isMounted || !isLoggedIn) {
-    return null
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Загрузка...</p>
+      </div>
+    )
   }
 
   return (

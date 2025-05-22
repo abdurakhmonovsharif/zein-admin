@@ -1,25 +1,39 @@
-FROM node:20
+FROM node:20-alpine AS builder
 
 # Set working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package files first
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-
-# Install dependencies with pnpm
+# Install pnpm globally
 RUN npm install -g pnpm
-# Remove --frozen-lockfile flag to allow pnpm to update the lockfile
-RUN pnpm install
 
-# Copy all project files (including components directory)
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies with production flag
+RUN pnpm install --prod
+
+# Copy application code
 COPY . .
 
 # Build the application
 RUN pnpm run build
 
-# Expose port
+# Remove development dependencies
+RUN pnpm prune --prod
+
+# Production image
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy built application
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/public ./public
+
+# Expose port (Render will override this with their own port)
 EXPOSE 3001
 
-# Start the application
-CMD ["pnpm", "start"]
+# Start command
+CMD ["npm", "start"]

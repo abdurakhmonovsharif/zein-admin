@@ -1,22 +1,27 @@
 FROM node:20
 
-# 1. Ishchi katalog
+# Set working directory
 WORKDIR /usr/src/app
 
-# 2. package.json va lock faylni copy
+# Copy package files first
 COPY package*.json ./
-COPY package-lock.json ./
-# 3. Paketlarni o‘rnatish
-RUN npm install --production --save --force
+COPY pnpm-lock.yaml ./
 
-# 4. Qolgan kodlarni copy qilish
+# Install dependencies with pnpm
+RUN npm install -g pnpm
+RUN pnpm install --frozen-lockfile
+
+# Copy all project files (including components directory)
 COPY . .
 
-# 5. Production build
-RUN npm run build
+# Ensure components directory exists and has correct files
+RUN ls -la ./components || echo "Components directory not found"
 
-# 6. Port ochish
-EXPOSE 3000
+# Build the application with verbose logging
+RUN pnpm run build --verbose
 
-# 7. Appni start qilish
-CMD ["npm", "start"]
+# Expose port
+EXPOSE 3001
+
+# Start the application
+CMD ["pnpm", "start"]

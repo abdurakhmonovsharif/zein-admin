@@ -9,12 +9,12 @@ services:
     container_name: zein-edtech-admin
     restart: always
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - NODE_ENV=production
       # Add other environment variables your app needs
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001"]
       interval: 30s
       timeout: 10s
       retries: 3

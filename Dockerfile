@@ -1,39 +1,22 @@
-FROM node:20-alpine AS builder
+FROM node:20
 
-# Set working directory
-WORKDIR /app
+# 1. Ishchi katalog
+WORKDIR /usr/src/app
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# 2. package.json va lock faylni copy
+COPY package*.json ./
+COPY package-lock.json ./
+# 3. Paketlarni o‘rnatish
+RUN npm install --production --save --force
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies with production flag
-RUN pnpm install --prod
-
-# Copy application code
+# 4. Qolgan kodlarni copy qilish
 COPY . .
 
-# Build the application
-RUN pnpm run build
+# 5. Production build
+RUN npm run build
 
-# Remove development dependencies
-RUN pnpm prune --prod
+# 6. Port ochish
+EXPOSE 4000
 
-# Production image
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy built application
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/public ./public
-
-# Expose port (Render will override this with their own port)
-EXPOSE 3001
-
-# Start command
+# 7. Appni start qilish
 CMD ["npm", "start"]

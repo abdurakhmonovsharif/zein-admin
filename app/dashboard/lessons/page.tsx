@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useSubjects } from "@/hooks/useSubject";
+import { Subject, useSubjects } from "@/hooks/useSubject";
 import { useTopics } from "@/hooks/useTopics";
 import { formatDate } from "@/lib/formatDate";
 import { useState } from "react";
@@ -53,36 +53,47 @@ export default function TopicsTable() {
     name: "",
     description: "",
     subjectId: "",
-    subject:""
+    subject: ""
   });
 
   const resetForm = () => {
-    setForm({ name: "", description: "", subjectId: "",subject:"" });
+    setForm({ name: "", description: "", subjectId: "", subject: "" });
     setEditId(null);
   };
 
   const handleCreateOrUpdate = () => {
     if (!form.name || !form.subjectId) return;
 
-    const payload = {
-      name: form.name,
-      description: form.description,
-      subject_id: parseInt(form.subjectId),
-      subject:parseInt(form.subjectId)
-    };
-
     if (editId) {
-      updateTopicMutation.mutate(
-        { ...payload, id: editId },
-        {
-          onSuccess: () => {
-            resetForm();
-            setOpen(false);
+      const originalTopic = topics?.find(t => t.id === editId);
+
+      if (originalTopic) {
+        updateTopicMutation.mutate(
+          {
+            ...originalTopic,
+            name: form.name,
+            description: form.description,
+            subject: {
+              ...originalTopic.subject,
+              id: parseInt(form.subjectId)
+            }
           },
-        }
-      );
+          {
+            onSuccess: () => {
+              resetForm();
+              setOpen(false);
+            },
+          }
+        );
+      }
     } else {
-      addTopicMutation.mutate(payload, {
+      addTopicMutation.mutate({
+        name: form.name,
+        description: form.description,
+        subject: subjects?.find(s => s.id === parseInt(form.subjectId)) as Subject,
+        image: null,
+        created_at: new Date().toISOString()
+      }, {
         onSuccess: () => {
           resetForm();
           setOpen(false);
@@ -97,7 +108,7 @@ export default function TopicsTable() {
       name: topic.name,
       description: topic.description || "",
       subjectId: topic.subject?.id?.toString() || "",
-      subject:topic.subject.id
+      subject: topic.subject.id
     });
     setOpen(true);
   };

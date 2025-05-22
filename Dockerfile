@@ -1,47 +1,22 @@
-FROM node:20-alpine AS base
+FROM node:20
 
-# Install dependencies only when needed
-FROM base AS deps
-WORKDIR /app
+# 1. Ishchi katalog
+WORKDIR /usr/src/app
 
-# Copy package files
-COPY package.json package-lock.json* ./
-RUN npm ci
+# 2. package.json va lock faylni copy
+COPY package*.json ./
+COPY package-lock.json ./
+# 3. Paketlarni o‘rnatish
+RUN npm install --production --save --force
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# 4. Qolgan kodlarni copy qilish
 COPY . .
 
-# Next.js collects anonymous telemetry data about general usage
-# Disable telemetry during the build
-ENV NEXT_TELEMETRY_DISABLED 1
-
-# Build the application
+# 5. Production build
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-
-# Create a non-root user to run the app
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Copy the necessary files
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
+# 6. Port ochish
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-CMD ["node", "server.js"]
+# 7. Appni start qilish
+CMD ["npm", "start"]

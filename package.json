@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install --force --save-exact --save-dev @types/node && next build",
-    "start": "next start",
+    "build": "next build",
+    "start": "next start -p 4000",
     "lint": "next lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

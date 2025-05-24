@@ -1,25 +1,26 @@
+# 1. Rasmni aniqlash
 FROM node:20
 
-# 1. Ishchi katalog
+# 2. Ishchi katalog
 WORKDIR /usr/src/app
 
-# 2. package.json va lock faylni copy
-COPY package*.json ./
-COPY package-lock.json ./
-# 3. Paketlarni o‘rnatish
-RUN npm install --production --save --forc
+# 3. package.json va lock faylni copy qilish
+COPY package.json package-lock.json ./
 
-# 4  ENV production
-COPY . .
-
-# 5. Qolgan kodlarni copy qilish
+# 4. Production muhitni o‘rnatish
 ENV NODE_ENV=production
 
-# 6. Production build
+# 5. Paketlarni o‘rnatish (xato tuzatildi)
+RUN npm install --production --force
+
+# 6. Qolgan fayllarni (shu jumladan tsconfig, next.config.js, src) copy qilish
+COPY . .
+
+# 7. Production build
 RUN npm run build
 
-# 7. Port ochish
+# 8. Portni ochish
 EXPOSE 4000
 
-# 8. Appni start qilish
+# 9. Appni ishga tushurish
 CMD ["npm", "start"]

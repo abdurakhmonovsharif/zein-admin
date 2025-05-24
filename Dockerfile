@@ -7,16 +7,19 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 COPY package-lock.json ./
 # 3. Paketlarni o‘rnatish
-RUN npm install --production --save --force
+RUN npm install --production --save --forc
 
-# 4. Qolgan kodlarni copy qilish
+# 4  ENV production
+ENV NODE_ENV=production
+
+# 5. Qolgan kodlarni copy qilish
 COPY . .
 
-# 5. Production build
+# 6. Production build
 RUN npm run build
 
-# 6. Port ochish
+# 7. Port ochish
 EXPOSE 4000
 
-# 7. Appni start qilish
+# 8. Appni start qilish
 CMD ["npm", "start"]

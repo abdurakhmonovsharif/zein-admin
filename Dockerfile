@@ -7,10 +7,10 @@ WORKDIR /app
 # 3. Copy package files
 COPY package*.json ./
 
-# 4. Install dependencies
-RUN npm ci
+# 4. Install all dependencies
+RUN npm install --legacy-peer-deps
 
-# 5. Copy source code
+# 5. Copy all source files
 COPY . .
 
 # 6. Build the application
@@ -23,16 +23,4 @@ ENV NODE_ENV=production
 EXPOSE 4000
 
 # 9. Start command
-CMD ["npm", "start"]
-
-# 6. Qolgan fayllarni (shu jumladan tsconfig, next.config.js, src) copy qilish
-COPY . .
-
-# 7. Production build
-RUN npm run build
-
-# 8. Portni ochish
-EXPOSE 4000
-
-# 9. Appni ishga tushurish
 CMD ["npm", "start"]

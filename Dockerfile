@@ -10,10 +10,10 @@ COPY package-lock.json ./
 RUN npm install --production --save --forc
 
 # 4  ENV production
-ENV NODE_ENV=production
+COPY . .
 
 # 5. Qolgan kodlarni copy qilish
-COPY . .
+ENV NODE_ENV=production
 
 # 6. Production build
 RUN npm run build

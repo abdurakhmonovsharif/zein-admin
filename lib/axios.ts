@@ -3,10 +3,6 @@ import Cookies from 'js-cookie'
 
 const api = axios.create({
   baseURL: "https://zein-edtech-server.onrender.com",
-  headers: {
-    'Content-Type': 'multipart/form-data',
-    'Accept': 'application/json'
-  },
 })
 
 // Request interceptor

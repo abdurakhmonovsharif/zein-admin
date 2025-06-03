@@ -10,12 +10,12 @@ import { Bar, BarChart, Line, LineChart, Pie, PieChart, ResponsiveContainer, Too
 
 interface DashboardStats {
   totalCourses: number;
-  totalLessons: number;
+  totalQuestions: number;
   totalStudents: number;
   totalClients: number;
   monthlyGrowth: {
     courses: number;
-    lessons: number;
+    questions: number;
     students: number;
     clients: number;
   };
@@ -102,9 +102,9 @@ export default function DashboardPage() {
             <FileQuestion className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalLessons || 0}</div>
+            <div className="text-2xl font-bold">{stats?.totalQuestions || 0}</div>
             <p className="text-xs text-muted-foreground">
-              +{stats?.monthlyGrowth.lessons || 0} за последний месяц
+              +{stats?.monthlyGrowth.questions || 0} за последний месяц
             </p>
           </CardContent>
         </Card>

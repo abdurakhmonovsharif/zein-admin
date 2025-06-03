@@ -299,7 +299,7 @@ export default function CoursesPage() {
                 {activeTab === "courses" ? "Добавить курс" : "Добавить уровень"}
               </Button>
             </DialogTrigger>
-            <DialogContent className="h-[90vh] overflow-y-auto">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>
                   {activeTab === "courses" ? "Добавить новый курс" : "Добавить новый уровень"}

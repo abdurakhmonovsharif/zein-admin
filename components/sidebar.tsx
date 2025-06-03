@@ -16,6 +16,7 @@ import {
   LogOut,
   MailQuestion,
   Menu,
+  NotebookPen,
   Settings,
   ShieldCheck,
   Users
@@ -72,6 +73,11 @@ export function Sidebar({ className }: SidebarProps) {
       title: "Студенты",
       href: "/dashboard/students",
       icon: <GraduationCap className="h-5 w-5" />,
+    },
+      {
+      title: "Результаты тестов",
+      href: "/dashboard/test-results",
+      icon: <NotebookPen className="h-5 w-5" />,
     },
     {
       title: "Клиенты",

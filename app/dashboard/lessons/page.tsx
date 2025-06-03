@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/label";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 import {
   Select,
   SelectContent,
@@ -31,6 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Subject, useSubjects } from "@/hooks/useSubject";
 import { useTopics } from "@/hooks/useTopics";
 import { formatDate } from "@/lib/formatDate";
+import { ja } from "date-fns/locale";
 import { useState } from "react";
 
 export default function TopicsTable() {
@@ -73,10 +74,11 @@ export default function TopicsTable() {
             ...originalTopic,
             name: form.name,
             description: form.description,
-            subject: {
-              ...originalTopic.subject,
-              id: parseInt(form.subjectId)
-            }
+            subject:parseInt(form.subjectId),
+            // subject: {
+            //   ...originalTopic.subject,
+            //   id: parseInt(form.subjectId)
+            // }
           },
           {
             onSuccess: () => {
@@ -90,10 +92,10 @@ export default function TopicsTable() {
       addTopicMutation.mutate({
         name: form.name,
         description: form.description,
-        subject: subjects?.find(s => s.id === parseInt(form.subjectId)) as Subject,
-        image: null,
+        subject: subjects?.find(s => s.id === parseInt(form.subjectId))?.id || 0,
         created_at: new Date().toISOString()
       }, {
+
         onSuccess: () => {
           resetForm();
           setOpen(false);

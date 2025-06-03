@@ -11,6 +11,7 @@ export interface Subject {
   topic_count?:number;
 }
 
+
 // 1. Fetch Subjects
 const fetchSubjects = async (): Promise<Subject[]> => {
   const res = await api.get("/subjects/");

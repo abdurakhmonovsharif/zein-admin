@@ -10,11 +10,20 @@ export interface Topic {
   id: number;
   name: string;
   description: string;
-  image: string | null;
   question_count: number;
   subject: Subject;
+  subject_id: number;
   created_at:string
 }
+export interface CreateTopic {
+  id: number;
+  name: string;
+  description: string;
+  question_count: number;
+  subject: number;
+  created_at:string
+}
+
 
 // 1. Fetch Topics with optional subject filter
 const fetchTopics = async (
@@ -30,14 +39,14 @@ const fetchTopics = async (
 };
 // 2. Add Topic
 const addTopic = async (
-  newTopic: Omit<Topic, "id" | "question_count">
+  newTopic: Omit<CreateTopic, "id" | "question_count">
 ): Promise<Topic> => {
   const res = await api.post("/topics/", newTopic);
   return res.data;
 };
 
 // 3. Update Topic
-const updateTopic = async (updatedTopic: Topic): Promise<Topic> => {
+const updateTopic = async (updatedTopic: CreateTopic): Promise<Topic> => {
   const res = await api.put(`/topics/${updatedTopic.id}/`, updatedTopic);
   return res.data;
 };
@@ -63,7 +72,7 @@ export function useTopics(subjectId?: string,sortOrder: "asc" | "desc" = "asc") 
   const addTopicMutation = useMutation<
     Topic,
     Error,
-    Omit<Topic, "id" | "question_count">,
+    Omit<CreateTopic, "id" | "question_count">,
     { previousTopics?: Topic[] }
   >({
     mutationFn: addTopic,
@@ -74,12 +83,13 @@ export function useTopics(subjectId?: string,sortOrder: "asc" | "desc" = "asc") 
         subjectId,
       ]);
 
-      queryClient.setQueryData<Topic[]>(["topics", subjectId], (old = []) => [
+      queryClient.setQueryData<CreateTopic[]>(["topics", subjectId], (old = []) => [
         ...old,
         {
           ...newTopic,
           id: Math.random(),
           question_count: 0,
+         
         },
       ]);
 
@@ -98,7 +108,7 @@ export function useTopics(subjectId?: string,sortOrder: "asc" | "desc" = "asc") 
   const updateTopicMutation = useMutation<
     Topic,
     Error,
-    Topic,
+    CreateTopic,
     { previousTopics?: Topic[] }
   >({
     mutationFn: updateTopic,
@@ -109,7 +119,7 @@ export function useTopics(subjectId?: string,sortOrder: "asc" | "desc" = "asc") 
         subjectId,
       ]);
 
-      queryClient.setQueryData<Topic[]>(["topics", subjectId], (old = []) =>
+      queryClient.setQueryData<CreateTopic[]>(["topics", subjectId], (old = []) =>
         old.map((t) => (t.id === updatedTopic.id ? updatedTopic : t))
       );
 

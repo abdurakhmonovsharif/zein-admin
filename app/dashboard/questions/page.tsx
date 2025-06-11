@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import { Choice, Question, useQuestions } from "@/hooks/useQuestion"
+import {useQuestions } from "@/hooks/useQuestion"
 import { useSubjects } from "@/hooks/useSubject"
 import { useTopics } from "@/hooks/useTopics"
 import { formatDate } from "@/lib/formatDate"
@@ -35,14 +35,13 @@ export default function QuestionsPage() {
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null)
   const [newQuestion, setNewQuestion] = useState({
     topic: "",
-    text_uz: "",
-    text_ru: "",
+    text: "",
     explanation: "",
     choices: [
-      { id: 1, text_uz: "", text_ru: "", is_correct: true },
-      { id: 2, text_uz: "", text_ru: "", is_correct: false },
-      { id: 3, text_uz: "", text_ru: "", is_correct: false },
-      { id: 4, text_uz: "", text_ru: "", is_correct: false }
+      { id: 1, text: "", is_correct: true },
+      { id: 2, text: "", is_correct: false },
+      { id: 3, text: "", is_correct: false },
+      { id: 4, text: "", is_correct: false }
     ]
   })
 
@@ -59,10 +58,7 @@ export default function QuestionsPage() {
 
   // Filter questions based on search term and selected filters
   const filteredQuestions = questions.filter(question => {
-    const matchesSearch = (
-      question.text_uz.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      question.text_ru.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    const matchesSearch = question.text.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesTopic = selectedTopic === "all" || (question.topic_id && question.topic_id.toString() === selectedTopic)
     const topicInfo = topics.find(t => t.id === question.topic_id)
     const matchesSubject = selectedSubject === "all" || (topicInfo && topicInfo.subject.id.toString() === selectedSubject)
@@ -74,13 +70,13 @@ export default function QuestionsPage() {
   const getTopicName = (topicId: number | null) => {
     if (!topicId) return "Без темы"
     const topic = topics.find(t => t.id === topicId)
-    return topic ? topic.name_ru||topic.name_uz : "Неизвестная тема"
+    return topic ? topic.name_ru || topic.name_uz : "Неизвестная тема"
   }
 
   // Handle option change for new question
-  const handleOptionChange = (index: number, field: 'text_uz' | 'text_ru', value: string) => {
+  const handleOptionChange = (index: number, value: string) => {
     const updatedChoices = [...newQuestion.choices]
-    updatedChoices[index] = { ...updatedChoices[index], [field]: value }
+    updatedChoices[index] = { ...updatedChoices[index], text: value }
     setNewQuestion({ ...newQuestion, choices: updatedChoices })
   }
 
@@ -94,10 +90,10 @@ export default function QuestionsPage() {
   }
 
   // Handle option change for editing question
-  const handleEditOptionChange = (index: number, field: 'text_uz' | 'text_ru', value: string) => {
+  const handleEditOptionChange = (index: number, value: string) => {
     if (currentQuestion) {
       const updatedChoices = [...currentQuestion.choices]
-      updatedChoices[index] = { ...updatedChoices[index], [field]: value }
+      updatedChoices[index] = { ...updatedChoices[index], text: value }
       setCurrentQuestion({ ...currentQuestion, choices: updatedChoices })
     }
   }
@@ -118,8 +114,7 @@ export default function QuestionsPage() {
     try {
       const questionData = {
         topic_id: newQuestion.topic ? parseInt(newQuestion.topic) : null,
-        text_uz: newQuestion.text_uz,
-        text_ru: newQuestion.text_ru,
+        text: newQuestion.text,
         explanation: newQuestion.explanation,
         choices: newQuestion.choices
       }
@@ -128,14 +123,13 @@ export default function QuestionsPage() {
 
       setNewQuestion({
         topic: "",
-        text_uz: "",
-        text_ru: "",
+        text: "",
         explanation: "",
         choices: [
-          { id: 1, text_uz: "", text_ru: "", is_correct: true },
-          { id: 2, text_uz: "", text_ru: "", is_correct: false },
-          { id: 3, text_uz: "", text_ru: "", is_correct: false },
-          { id: 4, text_uz: "", text_ru: "", is_correct: false }
+          { id: 1, text: "", is_correct: true },
+          { id: 2, text: "", is_correct: false },
+          { id: 3, text: "", is_correct: false },
+          { id: 4, text: "", is_correct: false }
         ]
       })
 
@@ -264,8 +258,7 @@ export default function QuestionsPage() {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Тема</TableHead>
-              <TableHead>Вопрос (UZ)</TableHead>
-              <TableHead>Вопрос (RU)</TableHead>
+              <TableHead>Вопрос</TableHead>
               <TableHead>Объяснение</TableHead>
               <TableHead className="hidden md:table-cell">Дата создания</TableHead>
               <TableHead className="hidden md:table-cell">Дата изменения</TableHead>
@@ -275,7 +268,7 @@ export default function QuestionsPage() {
           <TableBody>
             {isLoadingQuestions ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Загрузка вопросов...
                 </TableCell>
               </TableRow>
@@ -284,8 +277,7 @@ export default function QuestionsPage() {
                 <TableRow key={question.id}>
                   <TableCell className="font-medium">{question.id}</TableCell>
                   <TableCell>{getTopicName(question.topic_id)}</TableCell>
-                  <TableCell className="max-w-xs truncate">{question.text_uz}</TableCell>
-                  <TableCell className="max-w-xs truncate">{question.text_ru}</TableCell>
+                  <TableCell className="max-w-xs truncate">{question.text}</TableCell>
                   <TableCell className="max-w-xs truncate">{question.explanation}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {question.created_at ? formatDate(question.created_at) : "—"}
@@ -334,16 +326,16 @@ export default function QuestionsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Вопросы не найдены.
                 </TableCell>
-              </TableRow>
+                </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Диалог добавления вопроса */}
+      {/* Add Question Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[99vh] overflow-y-auto">
           <DialogHeader>
@@ -373,21 +365,12 @@ export default function QuestionsPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="text_uz">Текст вопроса (UZ)</Label>
+              <Label htmlFor="text">Текст вопроса</Label>
               <Textarea
-                id="text_uz"
-                value={newQuestion.text_uz}
-                onChange={(e) => setNewQuestion({ ...newQuestion, text_uz: e.target.value })}
-                placeholder="Введите текст вопроса на узбекском"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="text_ru">Текст вопроса (RU)</Label>
-              <Textarea
-                id="text_ru"
-                value={newQuestion.text_ru}
-                onChange={(e) => setNewQuestion({ ...newQuestion, text_ru: e.target.value })}
-                placeholder="Введите текст вопроса на русском"
+                id="text"
+                value={newQuestion.text}
+                onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
+                placeholder="Введите текст вопроса"
               />
             </div>
             <div className="grid gap-2">
@@ -405,14 +388,9 @@ export default function QuestionsPage() {
                 {newQuestion.choices.map((choice, index) => (
                   <div key={index} className="space-y-2">
                     <Input
-                      value={choice.text_uz}
-                      onChange={(e) => handleOptionChange(index, 'text_uz', e.target.value)}
-                      placeholder={`Вариант ${index + 1} (UZ)`}
-                    />
-                    <Input
-                      value={choice.text_ru}
-                      onChange={(e) => handleOptionChange(index, 'text_ru', e.target.value)}
-                      placeholder={`Вариант ${index + 1} (RU)`}
+                      value={choice.text}
+                      onChange={(e) => handleOptionChange(index, e.target.value)}
+                      placeholder={`Вариант ${index + 1}`}
                     />
                   </div>
                 ))}
@@ -428,7 +406,7 @@ export default function QuestionsPage() {
                   <div key={index} className="flex items-center space-x-2">
                     <RadioGroupItem value={choice.id.toString()} id={`option-${choice.id}`} />
                     <Label htmlFor={`option-${choice.id}`}>
-                      {choice.text_uz || choice.text_ru || `Вариант ${index + 1}`}
+                      {choice.text || `Вариант ${index + 1}`}
                     </Label>
                   </div>
                 ))}
@@ -441,9 +419,8 @@ export default function QuestionsPage() {
               onClick={handleAddQuestion}
               className="bg-[#7635E9] hover:bg-[#6025c7]"
               disabled={
-                !newQuestion.text_uz ||
-                !newQuestion.text_ru ||
-                newQuestion.choices.some(c => !c.text_uz || !c.text_ru) ||
+                !newQuestion.text ||
+                newQuestion.choices.some(c => !c.text) ||
                 addQuestionMutation.isPending
               }
             >
@@ -453,7 +430,7 @@ export default function QuestionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Диалог редактирования вопроса */}
+      {/* Edit Question Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[99vh] overflow-y-auto">
           <DialogHeader>
@@ -487,19 +464,11 @@ export default function QuestionsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-text-uz">Текст вопроса (UZ)</Label>
+                <Label htmlFor="edit-text">Текст вопроса</Label>
                 <Textarea
-                  id="edit-text-uz"
-                  value={currentQuestion.text_uz}
-                  onChange={(e) => setCurrentQuestion({ ...currentQuestion, text_uz: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-text-ru">Текст вопроса (RU)</Label>
-                <Textarea
-                  id="edit-text-ru"
-                  value={currentQuestion.text_ru}
-                  onChange={(e) => setCurrentQuestion({ ...currentQuestion, text_ru: e.target.value })}
+                  id="edit-text"
+                  value={currentQuestion.text}
+                  onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
@@ -516,14 +485,9 @@ export default function QuestionsPage() {
                   {currentQuestion.choices?.map((choice: Choice, index: number) => (
                     <div key={index} className="space-y-2">
                       <Input
-                        value={choice.text_uz}
-                        onChange={(e) => handleEditOptionChange(index, 'text_uz', e.target.value)}
-                        placeholder={`Вариант ${index + 1} (UZ)`}
-                      />
-                      <Input
-                        value={choice.text_ru}
-                        onChange={(e) => handleEditOptionChange(index, 'text_ru', e.target.value)}
-                        placeholder={`Вариант ${index + 1} (RU)`}
+                        value={choice.text}
+                        onChange={(e) => handleEditOptionChange(index, e.target.value)}
+                        placeholder={`Вариант ${index + 1}`}
                       />
                     </div>
                   ))}
@@ -539,7 +503,7 @@ export default function QuestionsPage() {
                     <div key={index} className="flex items-center space-x-2">
                       <RadioGroupItem value={choice.id.toString()} id={`edit-option-${choice.id}`} />
                       <Label htmlFor={`edit-option-${choice.id}`}>
-                        {choice.text_uz || choice.text_ru}
+                        {choice.text || `Вариант ${index + 1}`}
                       </Label>
                     </div>
                   ))}
@@ -560,7 +524,7 @@ export default function QuestionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Диалог просмотра вопроса */}
+      {/* View Question Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -573,12 +537,8 @@ export default function QuestionsPage() {
                 <p>{getTopicName(currentQuestion.topic_id)}</p>
               </div>
               <div className="mb-4">
-                <h3 className="font-medium">Вопрос (UZ):</h3>
-                <p>{currentQuestion.text_uz}</p>
-              </div>
-              <div className="mb-4">
-                <h3 className="font-medium">Вопрос (RU):</h3>
-                <p>{currentQuestion.text_ru}</p>
+                <h3 className="font-medium">Вопрос:</h3>
+                <p>{currentQuestion.text}</p>
               </div>
               {currentQuestion.explanation && (
                 <div className="mb-4">
@@ -591,8 +551,7 @@ export default function QuestionsPage() {
                 <ul className="list-disc pl-5 space-y-1">
                   {currentQuestion.choices?.map((choice: Choice) => (
                     <li key={choice.id}>
-                      UZ: {choice.text_uz}<br />
-                      RU: {choice.text_ru}
+                      {choice.text}
                       {choice.is_correct && <strong> (Правильный)</strong>}
                     </li>
                   ))}
@@ -611,7 +570,7 @@ export default function QuestionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Диалог удаления вопроса */}
+      {/* Delete Question Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -634,4 +593,22 @@ export default function QuestionsPage() {
       </Dialog>
     </div>
   )
+}
+
+// Define Choice and Question types
+export interface Choice {
+  id: number
+  text: string
+  is_correct: boolean
+}
+
+export interface Question {
+  id: number
+  topic_id: number | null
+  text: string
+  explanation?: string
+  image?: string
+  created_at?: string
+  updated_at?: string
+  choices: Choice[]
 }

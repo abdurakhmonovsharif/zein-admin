@@ -73,11 +73,12 @@ const navItems = [
     href: "/dashboard/students",
     icon: <GraduationCap className="h-5 w-5" />,
   },
-  // {
-  //   title: "Результаты тестов",
-  //   href: "/dashboard/test-results",
-  //   icon: <NotebookPen className="h-5 w-5" />,
-  // },
+  {
+    title: "Результаты тестов",
+    href: "#",
+    icon: <NotebookPen className="h-5 w-5" />,
+    soon:true
+  },
   {
     title: "Клиенты",
     href: "/dashboard/clients",
@@ -121,6 +122,7 @@ const navItems = [
               <Button variant="ghost" className={cn("w-full justify-start", pathname === item.href && "bg-muted")}>
                 {item.icon}
                 <span className="ml-2">{item.title}</span>
+                {item.soon && <span className="ml-auto text-xs text-yellow-500">Скоро</span>}
               </Button>
             </Link>
           ))}

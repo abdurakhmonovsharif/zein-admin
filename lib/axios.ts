@@ -3,7 +3,7 @@ import Cookies from 'js-cookie'
 
 const api = axios.create({
  baseURL: "https://zein-edtech-server.onrender.com",
- //  baseURL: "http://localhost:8000",
+  // baseURL: "http://localhost:8000",
 })
 
 // Request interceptor

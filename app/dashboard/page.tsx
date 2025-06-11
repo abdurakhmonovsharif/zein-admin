@@ -141,28 +141,7 @@ export default function DashboardPage() {
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
-              <CardHeader>
-                <CardTitle>Активность</CardTitle>
-              </CardHeader>
-              <CardContent className="pl-2">
-                <ActivityChart />
-              </CardContent>
-            </Card>
-            <Card className="col-span-3">
-              <CardHeader>
-                <CardTitle>Недавние клиенты</CardTitle>
-                <CardDescription>Последние 6 добавленных клиентов</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RecentClients />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
+             <Card className="col-span-4">
               <CardHeader>
                 <CardTitle>Распределение по языкам</CardTitle>
                 <CardDescription>Количество студентов по языкам</CardDescription>
@@ -178,7 +157,19 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-
+            <Card className="col-span-3">
+              <CardHeader>
+                <CardTitle>Недавние клиенты</CardTitle>
+                <CardDescription>Последние 6 добавленных клиентов</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RecentClients />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="analytics" className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Уровни владения языком</CardTitle>
@@ -203,7 +194,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-2">
+            <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>Средние баллы по компонентам</CardTitle>
                 <CardDescription>Результаты по различным аспектам экзаменов</CardDescription>

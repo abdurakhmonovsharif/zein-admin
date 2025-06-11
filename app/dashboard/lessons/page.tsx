@@ -1,37 +1,15 @@
 "use client";
 
-import {
-  Button,
-} from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Subject, useSubjects } from "@/hooks/useSubject";
+import { useSubjects } from "@/hooks/useSubject";
 import { useTopics } from "@/hooks/useTopics";
 import { formatDate } from "@/lib/formatDate";
-import { ja } from "date-fns/locale";
 import { useState } from "react";
 
 export default function TopicsTable() {
@@ -51,19 +29,20 @@ export default function TopicsTable() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({
-    name: "",
+    name_uz: "",
+    name_ru: "",
     description: "",
     subjectId: "",
     subject: ""
   });
 
   const resetForm = () => {
-    setForm({ name: "", description: "", subjectId: "", subject: "" });
+    setForm({ name_uz: "", name_ru: "", description: "", subjectId: "", subject: "" });
     setEditId(null);
   };
 
   const handleCreateOrUpdate = () => {
-    if (!form.name || !form.subjectId) return;
+    if (!form.name_uz || !form.name_ru || !form.subjectId) return;
 
     if (editId) {
       const originalTopic = topics?.find(t => t.id === editId);
@@ -72,13 +51,10 @@ export default function TopicsTable() {
         updateTopicMutation.mutate(
           {
             ...originalTopic,
-            name: form.name,
+            name_uz: form.name_uz,
+            name_ru: form.name_ru,
             description: form.description,
-            subject:parseInt(form.subjectId),
-            // subject: {
-            //   ...originalTopic.subject,
-            //   id: parseInt(form.subjectId)
-            // }
+            subject: parseInt(form.subjectId),
           },
           {
             onSuccess: () => {
@@ -90,12 +66,12 @@ export default function TopicsTable() {
       }
     } else {
       addTopicMutation.mutate({
-        name: form.name,
+        name_uz: form.name_uz,
+        name_ru: form.name_ru,
         description: form.description,
         subject: subjects?.find(s => s.id === parseInt(form.subjectId))?.id || 0,
         created_at: new Date().toISOString()
       }, {
-
         onSuccess: () => {
           resetForm();
           setOpen(false);
@@ -107,7 +83,8 @@ export default function TopicsTable() {
   const handleEdit = (topic: any) => {
     setEditId(topic.id);
     setForm({
-      name: topic.name,
+      name_uz: topic.name_uz,
+      name_ru: topic.name_ru,
       description: topic.description || "",
       subjectId: topic.subject?.id?.toString() || "",
       subject: topic.subject.id
@@ -131,7 +108,7 @@ export default function TopicsTable() {
               <SelectItem value="all">Все предметы</SelectItem>
               {subjects?.map((s) => (
                 <SelectItem key={s.id} value={String(s.id)}>
-                  {s.name}
+                  {s.name_ru}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -153,10 +130,19 @@ export default function TopicsTable() {
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Название</Label>
+                  <Label>Название (РУ)</Label>
                   <Input
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    value={form.name_ru}
+                    onChange={(e) => setForm({ ...form, name_ru: e.target.value })}
+                    placeholder="Введите название на русском"
+                  />
+                </div>
+                <div>
+                  <Label>Название (УЗ)</Label>
+                  <Input
+                    value={form.name_uz}
+                    onChange={(e) => setForm({ ...form, name_uz: e.target.value })}
+                    placeholder="Введите название на узбекском"
                   />
                 </div>
                 <div>
@@ -178,13 +164,16 @@ export default function TopicsTable() {
                     <SelectContent>
                       {subjects?.map((subject) => (
                         <SelectItem key={subject.id} value={String(subject.id)}>
-                          {subject.name}
+                          {subject.name_ru}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleCreateOrUpdate}>
+                <Button
+                  onClick={handleCreateOrUpdate}
+                  disabled={!form.name_uz || !form.name_ru || !form.subjectId}
+                >
                   {editId ? "Обновить" : "Создать"}
                 </Button>
               </div>
@@ -197,7 +186,8 @@ export default function TopicsTable() {
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>
-            <TableHead>Название</TableHead>
+            <TableHead>Название (РУ)</TableHead>
+            <TableHead>Название (УЗ)</TableHead>
             <TableHead>Описание</TableHead>
             <TableHead>Вопросов</TableHead>
             <TableHead>Предмет</TableHead>
@@ -213,16 +203,17 @@ export default function TopicsTable() {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={7}>Загрузка...</TableCell>
+              <TableCell colSpan={8}>Загрузка...</TableCell>
             </TableRow>
           ) : (
             topics?.map((topic) => (
               <TableRow key={topic.id}>
                 <TableCell>{topic.id}</TableCell>
-                <TableCell>{topic.name}</TableCell>
+                <TableCell>{topic.name_ru}</TableCell>
+                <TableCell>{topic.name_uz}</TableCell>
                 <TableCell>{topic.description}</TableCell>
                 <TableCell>{topic.question_count}</TableCell>
-                <TableCell>{topic?.subject?.name}</TableCell>
+                <TableCell>{topic?.subject?.name_ru}</TableCell>
                 <TableCell>{formatDate(topic.created_at)}</TableCell>
                 <TableCell className="flex gap-2">
                   <Button variant="outline" onClick={() => handleEdit(topic)}>

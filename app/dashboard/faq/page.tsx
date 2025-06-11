@@ -156,10 +156,10 @@ export default function FAQPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Вопрос (РУ)</TableHead>
+                <TableHead>Вопрос (УЗ)</TableHead>
                 <TableHead>Ответ (УЗ)</TableHead>
                 <TableHead>Вопрос (РУ)</TableHead>
-                <TableHead>Ответ (УЗ)</TableHead>
+                <TableHead>Ответ (РУ)</TableHead>
                 <TableHead className="text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>

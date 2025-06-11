@@ -8,7 +8,8 @@ import { Subject } from "./useSubject";
 
 export interface Topic {
   id: number;
-  name: string;
+  name_uz: string;
+  name_ru: string;
   description: string;
   question_count: number;
   subject: Subject;
@@ -17,7 +18,8 @@ export interface Topic {
 }
 export interface CreateTopic {
   id: number;
-  name: string;
+  name_ru: string;
+  name_uz: string;
   description: string;
   question_count: number;
   subject: number;

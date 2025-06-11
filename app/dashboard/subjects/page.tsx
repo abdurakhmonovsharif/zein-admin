@@ -19,13 +19,14 @@ export default function SubjectsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [currentSubject, setCurrentSubject] = useState<Subject | null>(null)
-  const [newSubject, setNewSubject] = useState({ name: "", description: "" })
+  const [newSubject, setNewSubject] = useState({ name_uz: "", name_ru: "", description: "" })
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
   const filteredSubjects = subjects
     ?.filter((subject: any) =>
-      subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      subject.name_ru.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      subject.name_uz.toLowerCase().includes(searchTerm.toLowerCase()) ||
       subject.description.toLowerCase().includes(searchTerm.toLowerCase())
     )
     ?.sort((a, b) => {
@@ -36,12 +37,13 @@ export default function SubjectsPage() {
 
   const handleAddSubject = () => {
     const subject: Subject = {
-      name: newSubject.name,
+      name_ru: newSubject.name_ru,
+      name_uz: newSubject.name_uz,
       description: newSubject.description,
       id: 0
     }
     addSubjectMutation.mutate(subject)
-    setNewSubject({ name: "", description: "" })
+    setNewSubject({ name_uz: "", name_ru: "", description: "" })
     setIsAddDialogOpen(false)
   }
 
@@ -86,7 +88,8 @@ export default function SubjectsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Название</TableHead>
+              <TableHead>Название (РУ)</TableHead>
+              <TableHead>Название (УЗ)</TableHead>
               <TableHead className="hidden md:table-cell">Описание</TableHead>
               <TableHead>Уроков</TableHead>
               <TableHead
@@ -103,7 +106,8 @@ export default function SubjectsPage() {
               filteredSubjects?.map((subject) => (
                 <TableRow key={subject.id}>
                   <TableCell className="font-medium">{subject.id}</TableCell>
-                  <TableCell>{subject.name}</TableCell>
+                  <TableCell>{subject.name_ru}</TableCell>
+                  <TableCell>{subject.name_uz}</TableCell>
                   <TableCell className="hidden md:table-cell max-w-xs truncate">{subject.description}</TableCell>
                   <TableCell>{subject.topic_count}</TableCell>
                   <TableCell className="hidden md:table-cell">{formatDate(subject.created_at || "")}</TableCell>
@@ -137,7 +141,7 @@ export default function SubjectsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Предметы не найдены.
                 </TableCell>
               </TableRow>
@@ -154,12 +158,21 @@ export default function SubjectsPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Название</Label>
+              <Label htmlFor="name_ru">Название (РУ)</Label>
               <Input
-                id="name"
-                value={newSubject.name}
-                onChange={(e) => setNewSubject({ ...newSubject, name: e.target.value })}
-                placeholder="Введите название предмета"
+                id="name_ru"
+                value={newSubject.name_ru}
+                onChange={(e) => setNewSubject({ ...newSubject, name_ru: e.target.value })}
+                placeholder="Введите название предмета на русском"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="name_uz">Название (УЗ)</Label>
+              <Input
+                id="name_uz"
+                value={newSubject.name_uz}
+                onChange={(e) => setNewSubject({ ...newSubject, name_uz: e.target.value })}
+                placeholder="Введите название предмета на узбекском"
               />
             </div>
             <div className="grid gap-2">
@@ -176,7 +189,11 @@ export default function SubjectsPage() {
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               Отмена
             </Button>
-            <Button onClick={handleAddSubject} className="bg-[#7635E9] hover:bg-[#6025c7]" disabled={!newSubject.name}>
+            <Button
+              onClick={handleAddSubject}
+              className="bg-[#7635E9] hover:bg-[#6025c7]"
+              disabled={!newSubject.name_ru || !newSubject.name_uz}
+            >
               Добавить
             </Button>
           </DialogFooter>
@@ -193,11 +210,19 @@ export default function SubjectsPage() {
           {currentSubject && (
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-title_ru">Название</Label>
+                <Label htmlFor="edit-name_ru">Название (РУ)</Label>
                 <Input
-                  id="edit-title_ru"
-                  value={currentSubject.name}
-                  onChange={(e) => setCurrentSubject({ ...currentSubject, name: e.target.value })}
+                  id="edit-name_ru"
+                  value={currentSubject.name_ru}
+                  onChange={(e) => setCurrentSubject({ ...currentSubject, name_ru: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name_uz">Название (УЗ)</Label>
+                <Input
+                  id="edit-name_uz"
+                  value={currentSubject.name_uz}
+                  onChange={(e) => setCurrentSubject({ ...currentSubject, name_uz: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
@@ -214,7 +239,11 @@ export default function SubjectsPage() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Отмена
             </Button>
-            <Button onClick={handleEditSubject} className="bg-[#7635E9] hover:bg-[#6025c7]">
+            <Button
+              onClick={handleEditSubject}
+              className="bg-[#7635E9] hover:bg-[#6025c7]"
+              disabled={!currentSubject?.name_ru || !currentSubject?.name_uz}
+            >
               Сохранить
             </Button>
           </DialogFooter>
@@ -233,7 +262,10 @@ export default function SubjectsPage() {
           {currentSubject && (
             <div className="py-4">
               <p>
-                <strong>Название:</strong> {currentSubject.name}
+                <strong>Название (РУ):</strong> {currentSubject.name_ru}
+              </p>
+              <p>
+                <strong>Название (УЗ):</strong> {currentSubject.name_uz}
               </p>
               <p>
                 <strong>Описание:</strong> {currentSubject.description}
@@ -250,8 +282,6 @@ export default function SubjectsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-
     </div>
   )
 }

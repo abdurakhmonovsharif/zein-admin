@@ -266,10 +266,10 @@ export default function SettingsPage() {
       <h1 className="text-3xl font-bold">Настройки</h1>
 
       <Tabs value={activeTab} defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">Контакты</TabsTrigger>
           <TabsTrigger value="telegram">Телеграм бот</TabsTrigger>
-          <TabsTrigger value="seo">SEO</TabsTrigger>
+          {/* <TabsTrigger value="seo">SEO</TabsTrigger> */}
           <TabsTrigger value="account">Аккаунт</TabsTrigger>
         </TabsList>
         {/* Общие настройки */}

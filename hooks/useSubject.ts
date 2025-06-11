@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // Define the Subject type to match your backend
 export interface Subject {
   id: number;
-  name: string;
+  name_uz: string;
+  name_ru: string;
   description?: string;
   image?: string;
   created_at?: string;

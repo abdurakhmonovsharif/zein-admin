@@ -42,64 +42,63 @@ export function Sidebar({ className }: SidebarProps) {
     // Перенаправляем на страницу входа
     router.push("/login")
   }
-
-  const navItems = [
-    {
-      title: "Панель управления",
-      href: "/dashboard",
-      icon: <LayoutDashboard className="h-5 w-5" />,
-    },
-    {
-      title: "Курсы",
-      href: "/dashboard/courses",
-      icon: <BookOpen className="h-5 w-5" />,
-    },
-    {
-      title: "Предметы",
-      href: "/dashboard/subjects",
-      icon: <BookOpen className="h-5 w-5" />,
-    },
-    {
-      title: "Темы",
-      href: "/dashboard/lessons",
-      icon: <FileQuestion className="h-5 w-5" />,
-    },
-    {
-      title: "Вопросы",
-      href: "/dashboard/questions",
-      icon: <FileQuestion className="h-5 w-5" />,
-    },
-    {
-      title: "Студенты",
-      href: "/dashboard/students",
-      icon: <GraduationCap className="h-5 w-5" />,
-    },
-      {
-      title: "Результаты тестов",
-      href: "/dashboard/test-results",
-      icon: <NotebookPen className="h-5 w-5" />,
-    },
-    {
-      title: "Клиенты",
-      href: "/dashboard/clients",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      title: "Администраторы",
-      href: "/dashboard/admins",
-      icon: <ShieldCheck className="h-5 w-5" />,
-    },
-    {
-      title: "Часто задаваемые вопросы",
-      href: "/dashboard/faq",
-      icon: <MailQuestion className="h-5 w-5" />,
-    },
-    {
-      title: "Настройки",
-      href: "/dashboard/settings",
-      icon: <Settings className="h-5 w-5" />,
-    },
-  ]
+const navItems = [
+  {
+    title: "Панель управления",
+    href: "/dashboard",
+    icon: <LayoutDashboard className="h-5 w-5" />,
+  },
+  {
+    title: "Курсы",
+    href: "/dashboard/courses",
+    icon: <BookOpen className="h-5 w-5" />,
+  },
+  {
+    title: "Предметы",
+    href: "/dashboard/subjects",
+    icon: <BookOpen className="h-5 w-5" />,
+  },
+  {
+    title: "Темы",
+    href: "/dashboard/lessons",
+    icon: <FileQuestion className="h-5 w-5" />,
+  },
+  {
+    title: "Вопросы",
+    href: "/dashboard/questions",
+    icon: <FileQuestion className="h-5 w-5" />,
+  },
+  {
+    title: "Результаты студентов",
+    href: "/dashboard/students",
+    icon: <GraduationCap className="h-5 w-5" />,
+  },
+  // {
+  //   title: "Результаты тестов",
+  //   href: "/dashboard/test-results",
+  //   icon: <NotebookPen className="h-5 w-5" />,
+  // },
+  {
+    title: "Клиенты",
+    href: "/dashboard/clients",
+    icon: <Users className="h-5 w-5" />,
+  },
+  {
+    title: "Администраторы",
+    href: "/dashboard/admins",
+    icon: <ShieldCheck className="h-5 w-5" />,
+  },
+  {
+    title: "Часто задаваемые вопросы",
+    href: "/dashboard/faq",
+    icon: <MailQuestion className="h-5 w-5" />,
+  },
+  {
+    title: "Настройки",
+    href: "/dashboard/settings",
+    icon: <Settings className="h-5 w-5" />,
+  },
+]
 
   const filteredNavItems = navItems.filter(item => {
     if (item.title === "Администраторы" && isAdminRole()) {

@@ -4,14 +4,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 // Define Choice and Question types
 export interface Choice {
   id: number
-  text: string
+  text_uz: string
+  text_ru: string
   is_correct: boolean
 }
 
 export interface Question {
   id: number
   topic_id: number|null
-  text: string
+  text_uz: string
+  text_ru: string
   explanation?: string
   image?: string
   created_at?: string

@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,7 +33,7 @@ import { useCourses, type Course, type CourseLevel } from "@/hooks/useCourses"
 import { Eye, Pencil, Plus, Trash, X } from "lucide-react"
 import { useState } from "react"
 
-// Add new interface for feature pairs
+// Interface for feature pairs
 interface FeaturePair {
   uz: string;
   ru: string;
@@ -40,17 +41,20 @@ interface FeaturePair {
 
 export default function CoursesPage() {
   const { toast } = useToast()
-  const [activeTab, setActiveTab] = useState("courses")
+  const [activeTab, setActiveTab] = useState<string>("courses")
   const [isAddCourseOpen, setIsAddCourseOpen] = useState(false)
   const [isEditCourseOpen, setIsEditCourseOpen] = useState(false)
   const [isAddLevelOpen, setIsAddLevelOpen] = useState(false)
   const [isEditLevelOpen, setIsEditLevelOpen] = useState(false)
   const [isViewFeaturesOpen, setIsViewFeaturesOpen] = useState(false)
+  const [isDeleteCourseModalOpen, setIsDeleteCourseModalOpen] = useState(false)
+  const [isDeleteLevelModalOpen, setIsDeleteLevelModalOpen] = useState(false)
+  const [courseToDelete, setCourseToDelete] = useState<number | null>(null)
+  const [levelToDelete, setLevelToDelete] = useState<number | null>(null)
   const [viewingLevel, setViewingLevel] = useState<CourseLevel | null>(null)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [editingLevel, setEditingLevel] = useState<CourseLevel | null>(null)
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>("all")
-  // Add states for features
   const [newFeatures, setNewFeatures] = useState<FeaturePair[]>([{ uz: "", ru: "" }])
   const [editFeatures, setEditFeatures] = useState<FeaturePair[]>([])
 
@@ -72,12 +76,11 @@ export default function CoursesPage() {
     updateCourseLevelMutation,
   } = useCourseLevels()
 
-  // Add filtered levels computation
   const filteredLevels = levels?.filter(level =>
     selectedCourseFilter === "all" || level.course.toString() === selectedCourseFilter
   )
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('uz-UZ', {
       style: 'currency',
       currency: 'UZS',
@@ -85,14 +88,12 @@ export default function CoursesPage() {
     }).format(price)
   }
 
-  const formatInputPrice = (value: string) => {
-    // Remove all non-digit characters
+  const formatInputPrice = (value: string): string => {
     const numbers = value.replace(/\D/g, '')
-    // Format with thousand separators
     return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, " ")
   }
 
-  const handlePriceInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePriceInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const formatted = formatInputPrice(e.target.value)
     e.target.value = formatted
   }
@@ -150,8 +151,7 @@ export default function CoursesPage() {
     }
   }
 
-  // Add function to handle adding new feature inputs
-  const addNewFeature = (isEdit: boolean) => {
+  const addNewFeature = (isEdit: boolean): void => {
     if (isEdit) {
       setEditFeatures([...editFeatures, { uz: "", ru: "" }])
     } else {
@@ -159,8 +159,7 @@ export default function CoursesPage() {
     }
   }
 
-  // Add function to handle removing feature inputs
-  const removeFeature = (index: number, isEdit: boolean) => {
+  const removeFeature = (index: number, isEdit: boolean): void => {
     if (isEdit) {
       setEditFeatures(editFeatures.filter((_, i) => i !== index))
     } else {
@@ -168,8 +167,7 @@ export default function CoursesPage() {
     }
   }
 
-  // Add function to handle feature input changes
-  const handleFeatureChange = (index: number, field: 'uz' | 'ru', value: string, isEdit: boolean) => {
+  const handleFeatureChange = (index: number, field: 'uz' | 'ru', value: string, isEdit: boolean): void => {
     if (isEdit) {
       const updatedFeatures = [...editFeatures]
       updatedFeatures[index][field] = value
@@ -198,7 +196,7 @@ export default function CoursesPage() {
     try {
       await addCourseLevelMutation.mutateAsync(newLevel)
       setIsAddLevelOpen(false)
-      setNewFeatures([{ uz: "", ru: "" }]) // Reset features
+      setNewFeatures([{ uz: "", ru: "" }])
       toast({
         title: "Успех",
         description: "Уровень курса успешно создан",
@@ -233,7 +231,7 @@ export default function CoursesPage() {
       await updateCourseLevelMutation.mutateAsync(updatedLevel)
       setIsEditLevelOpen(false)
       setEditingLevel(null)
-      setEditFeatures([]) // Reset edit features
+      setEditFeatures([])
       toast({
         title: "Успех",
         description: "Уровень курса успешно обновлен",
@@ -260,6 +258,9 @@ export default function CoursesPage() {
         description: "Не удалось удалить курс",
         variant: "destructive",
       })
+    } finally {
+      setIsDeleteCourseModalOpen(false)
+      setCourseToDelete(null)
     }
   }
 
@@ -276,6 +277,9 @@ export default function CoursesPage() {
         description: "Не удалось удалить уровень курса",
         variant: "destructive",
       })
+    } finally {
+      setIsDeleteLevelModalOpen(false)
+      setLevelToDelete(null)
     }
   }
 
@@ -285,7 +289,7 @@ export default function CoursesPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} defaultValue={activeTab} onValueChange={setActiveTab}>
         <div className="flex justify-between items-center mb-6">
           <TabsList>
             <TabsTrigger value="courses">Курсы</TabsTrigger>
@@ -299,7 +303,7 @@ export default function CoursesPage() {
                 {activeTab === "courses" ? "Добавить курс" : "Добавить уровень"}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {activeTab === "courses" ? "Добавить новый курс" : "Добавить новый уровень"}
@@ -309,14 +313,13 @@ export default function CoursesPage() {
                 {activeTab === "courses" ? (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="name_uz">Название (UZ)</Label>
+                      <Label htmlFor="name_uz">Название (УЗ)</Label>
                       <Input id="name_uz" name="name_uz" required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="name_ru">Название (RU)</Label>
+                      <Label htmlFor="name_ru">Название (РУ)</Label>
                       <Input id="name_ru" name="name_ru" required />
                     </div>
-
                   </>
                 ) : (
                   <>
@@ -336,11 +339,11 @@ export default function CoursesPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="title_uz">Название (UZ)</Label>
+                      <Label htmlFor="title_uz">Название (УЗ)</Label>
                       <Input id="title_uz" name="title_uz" required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="title_ru">Название (RU)</Label>
+                      <Label htmlFor="title_ru">Название (РУ)</Label>
                       <Input id="title_ru" name="title_ru" required />
                     </div>
                     <div className="space-y-2">
@@ -362,7 +365,6 @@ export default function CoursesPage() {
                           placeholder="1 000 000"
                           onChange={handlePriceInput}
                           onBlur={(e) => {
-                            // Store the raw number value in a hidden input
                             const rawValue = e.target.value.replace(/\D/g, '')
                             const hiddenInput = document.getElementById('raw_price') as HTMLInputElement
                             if (hiddenInput) hiddenInput.value = rawValue
@@ -435,8 +437,8 @@ export default function CoursesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    <TableHead>Название (UZ)</TableHead>
-                    <TableHead>Название (RU)</TableHead>
+                    <TableHead>Название (УЗ)</TableHead>
+                    <TableHead>Название (РУ)</TableHead>
                     <TableHead>Действия</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -470,21 +472,18 @@ export default function CoursesPage() {
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent >
+                            <DialogContent>
                               <DialogHeader>
                                 <DialogTitle>Редактировать курс</DialogTitle>
                               </DialogHeader>
                               <form onSubmit={handleUpdateCourse} className="space-y-4">
                                 <div className="space-y-2">
-                                  <Label htmlFor="name_uz">Название (UZ)</Label>
+                                  <Label htmlFor="name_uz">Название (УЗ)</Label>
                                   <Input id="name_uz" name="name_uz" defaultValue={course.name_uz} required />
                                 </div>
                                 <div className="space-y-2">
-                                  <Label htmlFor="name_ru">Название (RU)</Label>
+                                  <Label htmlFor="name_ru">Название (РУ)</Label>
                                   <Input id="name_ru" name="name_ru" defaultValue={course.name_ru} required />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="language">Язык</Label>
                                 </div>
                                 <Button type="submit" className="w-full">
                                   Обновить курс
@@ -492,13 +491,52 @@ export default function CoursesPage() {
                               </form>
                             </DialogContent>
                           </Dialog>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteCourse(course.id)}
+                          <Dialog
+                            open={isDeleteCourseModalOpen && courseToDelete === course.id}
+                            onOpenChange={(open) => {
+                              setIsDeleteCourseModalOpen(open)
+                              if (!open) setCourseToDelete(null)
+                            }}
                           >
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setCourseToDelete(course.id)
+                                  setIsDeleteCourseModalOpen(true)
+                                }}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Удалить курс</DialogTitle>
+                              </DialogHeader>
+                              <p>
+                                Вы уверены, что хотите удалить этот курс? Это действие нельзя будет отменить.
+                                Все связанные уровни курса также будут удалены.
+                              </p>
+                              <DialogFooter>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setIsDeleteCourseModalOpen(false)
+                                    setCourseToDelete(null)
+                                  }}
+                                >
+                                  Нет
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => handleDeleteCourse(course.id)}
+                                >
+                                  Да
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
                         </TableCell>
                       </TableRow>
                     ))
@@ -540,8 +578,8 @@ export default function CoursesPage() {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Курс</TableHead>
-                    <TableHead>Название (UZ)</TableHead>
-                    <TableHead>Название (RU)</TableHead>
+                    <TableHead>Название (УЗ)</TableHead>
+                    <TableHead>Название (РУ)</TableHead>
                     <TableHead>Уровень</TableHead>
                     <TableHead>Длительность</TableHead>
                     <TableHead>Цена</TableHead>
@@ -626,7 +664,6 @@ export default function CoursesPage() {
                                 size="icon"
                                 onClick={() => {
                                   setEditingLevel(level)
-                                  // Initialize edit features from existing level features
                                   setEditFeatures(
                                     level.features_uz.map((uz, index) => ({
                                       uz,
@@ -651,11 +688,11 @@ export default function CoursesPage() {
                                   <Input id="course" name="course" defaultValue={level.course.toString()} required />
                                 </div>
                                 <div className="space-y-2">
-                                  <Label htmlFor="title_uz">Название (UZ)</Label>
+                                  <Label htmlFor="title_uz">Название (УЗ)</Label>
                                   <Input id="title_uz" name="title_uz" defaultValue={level.title_uz} required />
                                 </div>
                                 <div className="space-y-2">
-                                  <Label htmlFor="title_ru">Название (RU)</Label>
+                                  <Label htmlFor="title_ru">Название (РУ)</Label>
                                   <Input id="title_ru" name="title_ru" defaultValue={level.title_ru} required />
                                 </div>
                                 <div className="space-y-2">
@@ -745,13 +782,51 @@ export default function CoursesPage() {
                               </form>
                             </DialogContent>
                           </Dialog>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteLevel(level.id)}
+                          <Dialog
+                            open={isDeleteLevelModalOpen && levelToDelete === level.id}
+                            onOpenChange={(open) => {
+                              setIsDeleteLevelModalOpen(open)
+                              if (!open) setLevelToDelete(null)
+                            }}
                           >
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setLevelToDelete(level.id)
+                                  setIsDeleteLevelModalOpen(true)
+                                }}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Удалить уровень курса</DialogTitle>
+                              </DialogHeader>
+                              <p>
+                                Вы уверены, что хотите удалить этот уровень курса? Это действие нельзя будет отменить.
+                              </p>
+                              <DialogFooter>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setIsDeleteLevelModalOpen(false)
+                                    setLevelToDelete(null)
+                                  }}
+                                >
+                                  Нет
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => handleDeleteLevel(level.id)}
+                                >
+                                  Да
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
                         </TableCell>
                       </TableRow>
                     ))
